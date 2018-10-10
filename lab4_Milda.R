@@ -57,12 +57,12 @@ hyperParam2 <- list(sigmaF = 1, l = 0.3)
 #posteriorGP(X = xGrid, y = ySim, XStar = XStar2, hyperParam = hyperParam2, sigmaNoise = 0.1)
 posteriorQ2 <- posteriorGP(X = XStar2, y = yStar2, XStar = XStar2, hyperParam = hyperParam2, sigmaNoise = 0.1)
 
-## Somehow I need to use the posterior mean, posterior variance in generating 
-# Plot the posterior mean of f over the interval [-1,1]
+## Somehow I need to use the posterior mean, posterior variance in generating values for plotting (potentially f ??)
+# Plot the posterior mean of f over the interval [-1,1]???
 xGrid <- seq(-1,1,length=20)
 ySim2 <- rnorm(length(xGrid),mean=posteriorQ2$posterior_mean, sd = sqrt(posteriorQ2$posterior_var))
 
-# Plot over a grid
+# Plot over a grid when I keep updating posterior with all X points in the interval [-1,1]
 means <- c()
 vars <- c()
 temp <- c()
