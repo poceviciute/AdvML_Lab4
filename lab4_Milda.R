@@ -122,4 +122,13 @@ lines(x=xGrid,y=low_band5, type="l",col="blue")
 
 ### Question2
 
+install.packages('kernlab')
+install.packages("AtmRay") # To make 2D grid like in Matlab's meshgrid
+library(kernlab)
+library(AtmRay)
+
 dataQ2 <- read.csv("/home/milpo192/Documents/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
+time <- 1:2190
+day <- 1:365
+Stime <- seq(1,2190,by=5)
+Sday <- seq(1,365,by=5)
