@@ -1,6 +1,8 @@
 
 
-### Question 1
+## Question 1
+
+### Part1
 
 # Setting up the kernel
 SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
@@ -32,7 +34,7 @@ posteriorGP <- function(X, y, XStar, hyperParam, sigmaNoise) {
     
 }
 
-## Question 2
+### Part 2
 
 library("mvtnorm")
 
@@ -46,56 +48,78 @@ SimGP <- function(m = 0,K,x,...){
     return(f)
 }
 
-# Generate the data set
+# Information for updating the prior
 
-XStar2 <- 0.4
-yStar2 <- 0.719
-
-# Use the data set and new given point to compute the posterior
+X_observations <- c(0.4)
+y_observations <- c(0.719)
 hyperParam2 <- list(sigmaF = 1, l = 0.3)
-# Which one is the right one??
-#posteriorGP(X = xGrid, y = ySim, XStar = XStar2, hyperParam = hyperParam2, sigmaNoise = 0.1)
-posteriorQ2 <- posteriorGP(X = XStar2, y = yStar2, XStar = XStar2, hyperParam = hyperParam2, sigmaNoise = 0.1)
 
-## Somehow I need to use the posterior mean, posterior variance in generating values for plotting (potentially f ??)
-# Plot the posterior mean of f over the interval [-1,1]???
-xGrid <- seq(-1,1,length=20)
-ySim2 <- rnorm(length(xGrid),mean=posteriorQ2$posterior_mean, sd = sqrt(posteriorQ2$posterior_var))
+# Use the data set and new given point to compute the posterior over the grid [-1,1]
+xGrid <- seq(-1,1,length=50)
+posteriorP2 <- posteriorGP(X = X_observations, y = y_observations, XStar = xGrid, hyperParam = hyperParam2, sigmaNoise = 0.1)
 
-# Plot over a grid when I keep updating posterior with all X points in the interval [-1,1]
-means <- c()
-vars <- c()
-temp <- c()
-for (i in 1:length(xGrid)){
-    temp <- posteriorGP(X = xGrid, y = ySim, XStar = xGrid[1:i], 
-                             hyperParam = hyperParam2, sigmaNoise = 0.1)
-means[i] <- mean(temp$posterior_mean)
-vars[i] <- mean(temp$posterior_var)
-}
+# find probability bounds
+error <- qnorm(0.975)*sqrt(diag(posteriorP2$posterior_var))
+upp_band <- as.vector(posteriorP2$posterior_mean) + as.vector(error) 
+low_band <- as.vector(posteriorP2$posterior_mean) - as.vector(error) 
+# Plot the posterior means over a grid
+plot(x=xGrid,y=posteriorP2$posterior_mean, type="l",ylim=c(-2,2))
+# Add 95% probability bounds (check bayesian course, we must have doen it there)
+lines(x=xGrid,y=upp_band, type="l",col="blue")
+lines(x=xGrid,y=low_band, type="l",col="blue")
 
-#############
-# The hint suggests that I should increase the number of points used as XStar, but then mt algorithm returns 
-# multiple means. I did not find anywhere info how to deal with several XStar points.. I calculated the mean 
-# of several means for different time points, but is it ok? 
-# Example of what my function returns
-posteriorGP(X = xGrid, y = ySim, XStar = xGrid[1:5], 
-            hyperParam = hyperParam2, sigmaNoise = 0.1)
-## Or maybe we don't need the loop - just have the posterior means calculated for all X observations?
+### Part 3
 
-temp <- posteriorGP(X = xGrid, y = ySim, XStar = xGrid, 
-                    hyperParam = hyperParam2, sigmaNoise = 0.1)
-means <- temp$posterior_mean
-vars <- temp$posterior_var
+# Update the information
 
-### How to build confidence interval????
+X_observations[2] <- -0.6
+y_observations[2] <- -0.044
 
-Upbound <- means + qnorm(0.95)*vars
-Lobound <- means - qnorm(0.95)*vars
+posteriorP3 <- posteriorGP(X = X_observations, y = y_observations, XStar = xGrid, hyperParam = hyperParam2, sigmaNoise = 0.1)
+# find probability bounds
+error3 <- qnorm(0.975)*sqrt(diag(posteriorP3$posterior_var))
+upp_band3 <- as.vector(posteriorP3$posterior_mean) + as.vector(error3) 
+low_band3 <- as.vector(posteriorP3$posterior_mean) - as.vector(error3) 
 
-plot(x=xGrid,y=means,type="l")
-lines(xGrid,Upbound, col = "blue", lwd = 2)
-lines(xGrid,Lobound, col = "blue", lwd = 2)
+# Plot the posterior means over a grid
+plot(x=xGrid,y=posteriorP3$posterior_mean, type="l",ylim=c(-2,2))
+# Add 95% probability bounds (check bayesian course, we must have doen it there)
+lines(x=xGrid,y=upp_band3, type="l",col="blue")
+lines(x=xGrid,y=low_band3, type="l",col="blue")
 
+### Part 4
 
+X_observations[3:5] <- c(-0.2,0.4,0.8)
+y_observations[3:5] <- c(-0.940, 0.719, -0.664)
 
+posteriorP4 <- posteriorGP(X = X_observations, y = y_observations, XStar = xGrid, hyperParam = hyperParam2, sigmaNoise = 0.1)
+# find probability bounds
+error4 <- qnorm(0.975)*sqrt(diag(posteriorP4$posterior_var))
+upp_band4 <- as.vector(posteriorP4$posterior_mean) + as.vector(error4) 
+low_band4 <- as.vector(posteriorP4$posterior_mean) - as.vector(error4) 
 
+# Plot the posterior means over a grid
+plot(x=xGrid,y=posteriorP4$posterior_mean, type="l",ylim=c(-2,2))
+# Add 95% probability bounds (check bayesian course, we must have doen it there)
+lines(x=xGrid,y=upp_band4, type="l",col="blue")
+lines(x=xGrid,y=low_band4, type="l",col="blue")
+
+### Part 5
+
+hyperParam5 <- list(sigmaF = 1, l = 1)
+
+posteriorP5 <- posteriorGP(X = X_observations, y = y_observations, XStar = xGrid, hyperParam = hyperParam5, sigmaNoise = 0.1)
+# find probability bounds
+error5 <- qnorm(0.975)*sqrt(diag(posteriorP5$posterior_var))
+upp_band5 <- as.vector(posteriorP5$posterior_mean) + as.vector(error5) 
+low_band5 <- as.vector(posteriorP5$posterior_mean) - as.vector(error5) 
+
+# Plot the posterior means over a grid
+plot(x=xGrid,y=posteriorP5$posterior_mean, type="l", ylim = c(-5,-1))
+# Add 95% probability bounds (check bayesian course, we must have doen it there)
+lines(x=xGrid,y=upp_band5, type="l",col="blue")
+lines(x=xGrid,y=low_band5, type="l",col="blue")
+
+### Question2
+
+dataQ2 <- read.csv("/home/milpo192/Documents/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
