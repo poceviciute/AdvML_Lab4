@@ -88,7 +88,7 @@ lines(x=xGrid,y=upp_band3, type="l",col="blue")
 lines(x=xGrid,y=low_band3, type="l",col="blue")
 
 ### Part 4
-
+X_observations[1] <- -1
 X_observations[3:5] <- c(-0.2,0.4,0.8)
 y_observations[3:5] <- c(-0.940, 0.719, -0.664)
 
@@ -122,13 +122,47 @@ lines(x=xGrid,y=low_band5, type="l",col="blue")
 
 ### Question2
 
+### Part 1
+
 install.packages('kernlab')
 install.packages("AtmRay") # To make 2D grid like in Matlab's meshgrid
 library(kernlab)
 library(AtmRay)
 
-dataQ2 <- read.csv("/home/milpo192/Documents/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
+dataQ2 <- read.csv("Z:/Documents/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
 time <- 1:2190
 day <- 1:365
 Stime <- seq(1,2190,by=5)
 Sday <- seq(1,365,by=5)
+
+# Function that returns kernel class object
+
+Matern32 <- function(sigmaf = 1, ell = 1) 
+{
+  rval <- function(x, y = NULL) {
+    r = sqrt(crossprod(x-y));
+    return(sigmaf^2*(1+sqrt(3)*r/ell)*exp(-sqrt(3)*r/ell))
+  }
+  class(rval) <- "kernel"
+  return(rval)
+} 
+
+MaternFunc = Matern32(sigmaf = 1, ell = 2)
+#evaluate it in the point x = 1; x' = 2
+MaternFunc(c(1,2))
+
+# use the kernelMatrix function to compute the covariance matrix K(X;X*)
+
+covM <- kernelMatrix(MaternFunc, c(1,3,4), c(2,3,4))
+
+### Part 2
+
+# Find the noise value
+
+polyFit <- lm(dataQ2$temp ~  time )
+sigmaNoise = sd(polyFit$residuals)
+MaternFunc2 = Matern32(sigmaf = 20, ell = 0.2)
+
+# Fit the GP with built in Square expontial kernel (called rbfdot in kernlab)
+GPfit <- gausspr(time, dataQ2$temp, kernel = MaternFunc2, var = sigmaNoise^2)
+pred2 <- predict(GPfit,time)
