@@ -115,7 +115,7 @@ upp_band5 <- as.vector(posteriorP5$posterior_mean) + as.vector(error5)
 low_band5 <- as.vector(posteriorP5$posterior_mean) - as.vector(error5) 
 
 # Plot the posterior means over a grid
-plot(x=xGrid,y=posteriorP5$posterior_mean, type="l", ylim = c(-5,-1))
+plot(x=xGrid,y=posteriorP5$posterior_mean, type="l", ylim = c(-2,1))
 # Add 95% probability bounds (check bayesian course, we must have doen it there)
 lines(x=xGrid,y=upp_band5, type="l",col="blue")
 lines(x=xGrid,y=low_band5, type="l",col="blue")
@@ -124,12 +124,13 @@ lines(x=xGrid,y=low_band5, type="l",col="blue")
 
 ### Part 1
 
-install.packages('kernlab')
-install.packages("AtmRay") # To make 2D grid like in Matlab's meshgrid
+#setwd( "C:/Users/Milda/Documents/Documents/Master degree/Adv Machine Learning/AdvML_Lab4")
+#install.packages('kernlab')
+#install.packages("AtmRay") # To make 2D grid like in Matlab's meshgrid
 library(kernlab)
 library(AtmRay)
 
-dataQ2 <- read.csv("Z:/Documents/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
+dataQ2 <- read.csv("TempTullinge.csv", header=TRUE, sep=";")
 time <- 1:2190
 day <- 1:365
 Stime <- seq(1,2190,by=5)
@@ -149,20 +150,74 @@ Matern32 <- function(sigmaf = 1, ell = 1)
 
 MaternFunc = Matern32(sigmaf = 1, ell = 2)
 #evaluate it in the point x = 1; x' = 2
-MaternFunc(c(1,2))
+MaternFunc(1,2)
 
 # use the kernelMatrix function to compute the covariance matrix K(X;X*)
+points <- matrix(c(1,3,4,2,3,4), ncol=2)
 
-covM <- kernelMatrix(MaternFunc, c(1,3,4), c(2,3,4))
+covM <- kernelMatrix(MaternFunc, points)
 
 ### Part 2
 
-# Find the noise value
+# # Find the noise value
+# polyFit <- lm(dataQ2$temp ~  time )
+# sigmaNoise = sd(polyFit$residuals)
+# MaternFunc2 = Matern32(sigmaf = 20, ell = 0.2)
+# 
+# # Fit the GP with built in Square expontial kernel (called rbfdot in kernlab)
+# GPfit <- gausspr(time, dataQ2$temp, kernel = MaternFunc2, var = sigmaNoise^2)
+# postMean2 <- predict(GPfit,time)
 
-polyFit <- lm(dataQ2$temp ~  time )
+## With the subsetted data
+temp <- dataQ2$temp[Stime]
+# Find the noise value
+polyFit <- lm(temp ~  Stime )
 sigmaNoise = sd(polyFit$residuals)
 MaternFunc2 = Matern32(sigmaf = 20, ell = 0.2)
 
 # Fit the GP with built in Square expontial kernel (called rbfdot in kernlab)
-GPfit <- gausspr(time, dataQ2$temp, kernel = MaternFunc2, var = sigmaNoise^2)
-pred2 <- predict(GPfit,time)
+GPfit <- gausspr(Stime, temp, kernel = MaternFunc2, var = sigmaNoise^2)
+postMean2 <- predict(GPfit,Stime)
+
+plot(Stime, temp)
+lines(Stime,postMean2, col="red", lwd = 2)
+
+
+### Part 3
+
+#################
+# Just for those 3 points - to try out if it works
+# Create covariance matrix of X,X
+points_K <- matrix(c(1,3,4,1,3,4), ncol=2)
+covM_K <- kernelMatrix(MaternFunc, points_K)
+
+# Create covariance matrix of X*,X*
+points_kstar <- matrix(c(2,3,4,2,3,4), ncol=2)
+covM_kk <- kernelMatrix(MaternFunc, points_kstar)
+
+# Use part of the algorithm from Q1 to find the variance
+noiseQ3 <- diag(nrow(covM_K)) * sigmaNoise
+L <- t(chol(covM_K + noiseQ3))
+v <- solve(L) %*% covM # covariance matrix X,X*
+
+postVar <- covM_kk - t(v) %*% v
+#####################
+# Now, what is our X and X* in the model? We only put in time variable...
+DataSC <- scale(dataQ2$temp)
+
+covM_P3 <- K <- kernelMatrix(kernel = MaternFunc, x = time, y = time)
+
+### Part 4
+# Do we pick the last observations, or how do we group temp per days?
+# Find the noise value
+polyFit4 <- lm(temp ~  rep.int(Sday,6) )
+sigmaNoise4 = sd(polyFit4$residuals)
+
+# Fit the GP with built in Square expontial kernel (called rbfdot in kernlab)
+GPfit4 <- gausspr(rep.int(Sday,6), temp, kernel = MaternFunc2, var = sigmaNoise4^2)
+postMean4 <- predict(GPfit4,rep.int(Sday,6))
+
+
+plot(rep.int(Sday,6), temp)
+lines(rep.int(Sday,6),postMean4, col="red", lwd = 2) #how and were to include the time variable?...
+
