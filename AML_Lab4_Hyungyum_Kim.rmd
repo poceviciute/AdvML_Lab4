@@ -392,7 +392,7 @@ probPreds <- predict(gpcfit1, gridPoints, type="probabilities")
 
 
 # Plotting for Prob(0)
-contour(x1,x2,matrix(probPreds[,1],100), 20, xlab = "varWave",
+contour(x1,x2,matrix(probPreds[,1],100,byrow=TRUE), 20, xlab = "varWave",
         ylab = "skewWave", main = 'Prediction probability contour plot')
 points(train[train[,5]=='0',1], train[train[,5]=='0',2],col="red",pch=20)
 points(train[train[,5]=='1',1], train[train[,5]=='1',2],col="blue",pch=20)
