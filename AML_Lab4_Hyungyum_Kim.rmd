@@ -1,0 +1,457 @@
+---
+title: "AML_Lab4_Hyungyum_Kim"
+author: "Josh Hyungyum Kim"
+date: "2018 - 10 - 15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1. Implementing GP Regression
+
+#### 1-1. Write your own code
+
+For the first exercise, the following Gaussian process regression model will be implemented:
+
+$$ y = f(x) + \epsilon, \ \ \epsilon \sim N(0, \sigma_n^2), \ \  f \sim GP(0, k(x,x^\prime))$$
+The function is called posteriorGP and has following inputs:
+
+- X: Vector of training inputs.
+- y: Vector of training targets/outputs.
+- XStar: Vector of inputs where the posterior distribution is evaluated. i.e. $X_{\star}$.
+- hyperParam: Vector with two elements, $\sigma_f$ and $l$.
+- sigmaNoise: Noise  standard deviation $\sigma_n$.
+
+
+```{r, warning=FALSE, message=FALSE}
+
+# load required pacakages
+require(kernlab)
+require(AtmRay)
+
+# 1.
+
+# 1-1.
+
+# Setting up the separated kernel function
+SquaredExpKernel <- function(x1, x2, sigmaF=1, l=0.3){
+  n1 <- length(x1)
+  n2 <- length(x2)
+  K <- matrix(NA,n1,n2)
+  for (i in 1:n2){
+    K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+  }
+  return(K)
+}
+
+# posteriorGP function
+posteriorGP <- function(X, y, XStar, hyperParam, sigmaNoise){
+  
+  covMat <- SquaredExpKernel(X, X, sigmaF=hyperParam[1], l=hyperParam[2])
+  L <- t(chol(covMat + diag(sigmaNoise, nrow=length(X)))) # Lower triangle
+  alpha <- solve(t(L), solve(L,y))
+  
+  # Gaussian process posterior mean
+  k_star <- SquaredExpKernel(X, XStar, sigmaF=hyperParam[1], l=hyperParam[2])
+  post_mean <- t(k_star) %*% alpha
+  
+  # Gaussian process posterior cov_mat
+  v <- solve(L, k_star)
+  post_var <- SquaredExpKernel(XStar, XStar, sigmaF=hyperParam[1], l=hyperParam[2]) - t(v)%*%v
+  
+  # Returning mean and variance
+  res <- list(Post_mean=as.vector(post_mean), Post_var=as.vector(diag(post_var)))
+  return(res)
+}
+
+```
+
+#### 1-2. Update prior with a single observation
+
+Here, one observation pair $(x,y)= (0.4, 0.719)$ and hyperparameters $\sigma_f=1$ and $l=0.3$ are used for 20 points in interval $x \in [-1,1]$.
+
+```{r}
+
+# 1-2.
+
+# Run the function with given conditions
+xGrid <- seq(-1,1,length=20)
+gpsim1 <- posteriorGP(X=0.4, y=0.719, XStar = xGrid, hyperParam = c(1,0.3), sigmaNoise = 0.1)
+
+# Posterior mean plot with 95% probability bands for f.
+plot(xGrid, gpsim1[[1]], type="l", ylim=c(-2.5,2.5), lwd=3, xlab="x", ylab="f",
+     main="Posterior mean with 95% probability bands for f")
+lines(xGrid, gpsim1[[1]]+1.96*sqrt(gpsim1[[2]]), col = "red", lwd = 3)
+lines(xGrid, gpsim1[[1]]-1.96*sqrt(gpsim1[[2]]), col = "red", lwd = 3)
+grid()
+
+```
+
+#### 1-3. Update prior with two observation pairs
+
+```{r}
+
+# 1-3.
+
+# Run the function with given conditions
+xGrid <- seq(-1,1,length=20)
+X <- c(0.4, -0.6)
+y <- c(0.719, -0.044)
+gpsim2 <- posteriorGP(X=X, y=y, XStar = xGrid, hyperParam = c(1,0.3), sigmaNoise = 0.1)
+
+# Posterior mean plot with 95% probability bands for f.
+plot(xGrid, gpsim2[[1]], type="l", ylim=c(-2.5,2.5), lwd=3, xlab="x", ylab="f",
+     main="Posterior mean with 2 observation pairs")
+lines(xGrid, gpsim2[[1]]+1.96*sqrt(gpsim2[[2]]), col = "red", lwd = 3)
+lines(xGrid, gpsim2[[1]]-1.96*sqrt(gpsim2[[2]]), col = "red", lwd = 3)
+grid()
+```
+
+#### 1-4. Update prior with all five observation pairs
+
+```{r}
+
+# 1-4.
+
+# Run the function with given conditions
+xGrid <- seq(-1,1,length=20)
+X <- c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y <- c(0.768, -0.044, -0.940, 0.719, -0.664)
+gpsim3 <- posteriorGP(X=X, y=y, XStar = xGrid, hyperParam = c(1,0.3), sigmaNoise = 0.1)
+
+# Posterior mean plot with 95% probability bands for f.
+plot(xGrid, gpsim3[[1]], type="l", ylim=c(-2.5,2.5), lwd=3, xlab="x", ylab="f",
+     main="Posterior mean with all 5 observation pairs")
+lines(xGrid, gpsim3[[1]]+1.96*sqrt(gpsim3[[2]]), col = "red", lwd = 3)
+lines(xGrid, gpsim3[[1]]-1.96*sqrt(gpsim3[[2]]), col = "red", lwd = 3)
+grid()
+```
+
+
+#### 1-5. Repeat 1-4 with hyperparameters $\sigma_f=1$ and $l=1$
+
+```{r}
+
+# 1-5.
+
+# Run the function with given conditions
+xGrid <- seq(-1,1,length=20)
+X <- c(-1.0, -0.6, -0.2, 0.4, 0.8)
+y <- c(0.768, -0.044, -0.940, 0.719, -0.664)
+gpsim3 <- posteriorGP(X=X, y=y, XStar = xGrid, hyperParam = c(1,1), sigmaNoise = 0.1)
+
+# Posterior mean plot with 95% probability bands for f.
+plot(xGrid, gpsim3[[1]], type="l", ylim=c(-2.5,2.5), lwd=3, xlab="x", ylab="f",
+     main="Posterior mean with l=1")
+lines(xGrid, gpsim3[[1]]+1.96*sqrt(gpsim3[[2]]), col = "red", lwd = 3)
+lines(xGrid, gpsim3[[1]]-1.96*sqrt(gpsim3[[2]]), col = "red", lwd = 3)
+grid()
+```
+
+Above plot shows the result of Gaussian process when the value of parameter $l$(ell) = 1. Compared to the previous step 1-4. it is obvious that the posterior mean plot is much more smoothed than before$l=0.3$. This result makes sense because  relatively high value of $l$ allows the kernel to yield high correlation of inputs.
+
+\clearpage
+
+### 2. GP Regression with kernlab
+
+For this exercise, data of daily mean  temperature in Stockholm (Tullinge) is used. 
+
+```{r}
+
+# 2.
+
+# read data from github
+temp <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/TempTullinge.csv",
+                 header=TRUE, sep=";")
+
+# create new variables
+temp$time <- seq(1, 2190, 1)
+temp$day <- rep(seq(1, 365, 1), 6)
+
+# Remove observations except every fifth
+temp <- temp[temp$day%%5==1,]
+row.names(temp) <- NULL
+
+head(temp)
+```
+
+
+#### 2-1. 
+
+Custom Squared Exponential Kernel function was defined above for Exercise1. 
+
+```{r}
+
+# 2-1.
+
+# ?gausspr
+# ?kernelMatrix
+
+# Evaluate point x=1, x'=2
+list("Squared_Exponential_Kernel(1,2)"=SquaredExpKernel(1, 2, 1, 0.3))
+
+# Cov_mat of X=(1,3,4) and X_star=(2,3,4)
+list("KernelMatrix(X,X_star)"=kernelMatrix(SquaredExpKernel, x=c(1,3,4), y=c(2,3,4)))
+```
+
+
+#### 2-2.
+
+$$temp = f(time) + \epsilon, \ \ \epsilon \sim N(0,\sigma_n^2), \ \ f \sim GP(0, k(time, time^\prime))$$
+
+```{r}
+
+# 2-2.
+
+SEK <- function(sigmaF = 20, l = 0.2){
+  
+  SquaredExpKernel <- function(x1, x2){
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
+    }
+    return(K)
+  }
+  
+  class(SquaredExpKernel) <- "kernel"
+  return(SquaredExpKernel)
+} 
+
+# Simple quadratic model with lm
+quad_reg <- lm(temp ~ I(time)+I(time^2), data = temp)
+summary(quad_reg)
+
+# sigma_n
+sigma_n=sd(quad_reg$residuals)
+list("Sigma_n"=sigma_n)
+
+# variable  setting
+Temp  <- temp$temp
+Time <- temp$time
+
+# Gaussian  process fit and plot
+gpfit1 <- gausspr(Time, Temp, kernel=SEK, kpar=list(sigmaF=20, l=0.2), var=sigma_n^2)
+meanPred <- predict(gpfit1, Time)
+
+plot(Time, Temp, pch=20, col="lightblue", ylim=c(-25,25),
+     main="Scatter plot with superimposed posterior mean f")
+lines(Time, meanPred, lwd = 3, type = "l")
+grid()
+```
+
+
+#### 2-3.
+
+```{r}
+
+# 2-3. 
+
+# Using posteriorGP function to have 95% bands
+post_run <- posteriorGP(X=scale(Time), y=Temp, XStar=scale(Time),
+                        hyperParam=c(20,0.2), sigmaNoise=sigma_n^2)
+
+# superimposed plot
+plot(Time, Temp, pch=20, col="lightblue",
+     ylim=c(-25,25), main="Posterior mean with 95% bands")
+lines(Time, meanPred, lwd = 3, type = "l", ylab="Temp")
+lines(Time, post_run[[1]]+1.96*sqrt(post_run[[2]]), col="red", lwd=2)
+lines(Time, post_run[[1]]-1.96*sqrt(post_run[[2]]), col="red", lwd=2)
+legend("bottomright", legend=c("Posterior_mean", "95% Bands"),
+       col=c("black","red"), lwd=c(3,1))
+grid()
+
+```
+
+
+#### 2-4.
+
+$$temp = f(day) + \epsilon, \ \ \epsilon \sim N(0,\sigma_n^2), \ \ f \sim GP(0, k(day, day^\prime))$$
+
+```{r}
+
+# 2-4.
+
+# Simple quadratic model with lm
+quad_day <- lm(temp ~ I(day)+I(day^2), data = temp)
+summary(quad_day)
+
+# sigma_day
+sigma_day=sd(quad_day$residuals)
+list("Sigma_day"=sigma_day)
+
+# Variable setting
+Day <- temp$day
+
+# Gaussian  process fit and plot
+gpfit2 <- gausspr(Day, Temp, kernel=SEK, kpar=list(sigmaF=20, l=0.2), var=sigma_day^2)
+meanPred2 <- predict(gpfit2, Day)
+
+plot(Time, Temp, pch=20, col="lightblue", ylim=c(-25,25),
+     main="Scatter plot with different posterior mean f")
+lines(Time, meanPred, lwd = 3, type = "l", col="red")
+lines(Time, meanPred2, lwd = 3, type = "l", col="blue")
+legend("bottomright", legend=c("Time_model", "Day_model"),
+       col=c("black","blue"), lwd=c(3,3))
+grid()
+```
+
+Model with prediction variable $Time$ shows more smooth posterior mean curve than model with prediction variable $Day$. Furthermore, the former shows the overall trend of temperature overtime for given period while the latter only shows the seasonal trend of 365 days since variables 1,5,...,365 are duplicated 6 times. Briefly, it is better to use $Time$ model to see changes overtime and better to use $Day$ model to see general seasonal trend within a year.
+
+#### 2-5.
+
+```{r}
+
+# 2-5.
+
+# Variable setting
+d <- 365/sd(Time)
+
+# Periodic kernel
+periodic_kernel <- function(sigmaF=20, l1=1, l2=10, d){
+  p_kern <- function(x1, x2){
+    r <- sqrt(crossprod(x1-x2))
+    return(sigmaF^2*exp(-2*sin((pi*r)/d)^2/(l1^2))*exp(-0.5*(r/l2)^2))
+  }
+  class(p_kern) <- "kernel"
+  return(p_kern)
+}
+
+# Gaussian  process fit and plot
+gpfit3 <- gausspr(Time, Temp, kernel=periodic_kernel, kpar=list(sigmaF=20, l1=1, l2=10, d=d), var=sigma_n^2)
+meanPred3 <- predict(gpfit3, Time)
+
+plot(Time, Temp, pch=20, col="lightblue", ylim=c(-25,25),
+     main="Squared_kernel(Time) VS Periodic_Kernel(Time)")
+lines(Time, meanPred, lwd = 3, type = "l", col="red")
+lines(Time, meanPred3, lwd = 3, type = "l", col="blue")
+legend("bottomright", legend=c("Time_model", "Periodic_kernel"),
+       col=c("red","blue"), lwd=c(3,3))
+grid()
+
+
+plot(Time, Temp, pch=20, col="lightblue", ylim=c(-25,25),
+     main="Squared_kernel(Day) VS Periodic_Kernel(Time)")
+lines(Time, meanPred2, lwd = 3, type = "l", col="red")
+lines(Time, meanPred3, lwd = 3, type = "l", col="blue")
+legend("bottomright", legend=c("Day_model", "Periodic_kernel"),
+       col=c("red","blue"), lwd=c(3,3))
+grid()
+```
+
+Based on the above two plots it seems the model with periodic kernel captures more within year seasonality than the model with squared kernel with variable $Time$ and also shows more overall trend of temperature than the model with squared kernel with variable $Day$. Since periodic kernel has one more length scale which controls the correlation between the same day in different years, this result looks reasonable.
+
+\clearpage
+
+### 3. GP Classification with kernlab
+
+```{r}
+
+# 3.
+
+# read data from github
+data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv",
+                 header=FALSE, sep=",")
+names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
+data[,5] <- as.factor(data[,5])
+head(data)
+
+# data description
+# http://archive.ics.uci.edu/ml/datasets/banknote+authentication
+
+# sample data for training and test sets
+set.seed(111)
+SelectTraining <- sample(1:dim(data)[1], size = 1000, replace = FALSE)
+train <- data[SelectTraining,]
+test <- data[-SelectTraining,]
+```
+
+
+#### 3-1. 
+
+```{r, message=FALSE}
+
+# 3-1.
+
+# GP fit with the given condition
+gpcfit1 <- gausspr(fraud ~ varWave + skewWave, data=train)
+
+# class probabilities 
+probPreds <- predict(gpcfit1, train[,1:2], type="probabilities")
+x1 <- seq(min(train[,1]),max(train[,1]),length=100)
+x2 <- seq(min(train[,2]),max(train[,2]),length=100)
+gridPoints <- meshgrid(x1, x2)
+gridPoints <- cbind(c(gridPoints$x), c(gridPoints$y))
+
+gridPoints <- data.frame(gridPoints)
+names(gridPoints) <- names(train)[1:2]
+probPreds <- predict(gpcfit1, gridPoints, type="probabilities")
+
+
+# Plotting for Prob(0)
+contour(x1,x2,matrix(probPreds[,1],100), 20, xlab = "varWave",
+        ylab = "skewWave", main = 'Prediction probability contour plot')
+points(train[train[,5]=='0',1], train[train[,5]=='0',2],col="red",pch=20)
+points(train[train[,5]=='1',1], train[train[,5]=='1',2],col="blue",pch=20)
+legend("bottomright", legend=c("0","1"), pch=c(20,20), col=c("red","blue"))
+
+# predict on the training set
+pred1 <- predict(gpcfit1, train[,1:2])
+conf_mat1 <- table(pred1, train$fraud) # confusion matrix
+acc1 <- (conf_mat1[1,1] + conf_mat1[2,2]) / sum(conf_mat1)
+
+list(Confusion_matrix=conf_mat1, Accuracy=acc1)
+```
+
+#### 3-2.
+
+```{r}
+
+# 3-2.
+
+# predict on the training set
+pred2 <- predict(gpcfit1, test[,1:2])
+conf_mat2 <- table(pred2, test$fraud) # confusion matrix
+acc2 <- (conf_mat2[1,1] + conf_mat2[2,2]) / sum(conf_mat2)
+
+list(Confusion_matrix=conf_mat2, Accuracy=acc2)
+```
+
+#### 3-3.
+
+```{r}
+
+# 3-3.
+
+# GP fit with all variables
+gpcfit2 <- gausspr(fraud ~ ., data=train)
+
+# predict on the training set
+pred3 <- predict(gpcfit2, test[,1:4])
+conf_mat3 <- table(pred3, test$fraud) # confusion matrix
+acc3 <- (conf_mat3[1,1] + conf_mat3[2,2]) / sum(conf_mat3)
+
+list(Confusion_matrix=conf_mat3, Accuracy=acc3)
+```
+
+Here, the accuracy is 0.9973118 which are very close to 1 and actually there was only one misclassification. The result with only two covariates was not bad since the accuracy was 0.9354839, but obviously result  gets better when all covariates are considered. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
