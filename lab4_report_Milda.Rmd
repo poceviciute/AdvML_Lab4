@@ -1,9 +1,21 @@
+---
+title: "GP_lab_Milda"
+author: "Milda Poceviciute"
+date: "16 October 2018"
+output: pdf_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kernlab)
+library(AtmRay)
+```
 
 ## Question 1
 
 ### Part1
 
+```{r}
 # Setting up the kernel
 SquaredExpKernel <- function(x1,x2,sigmaF=1,l=3){
     n1 <- length(x1)
@@ -33,20 +45,11 @@ posteriorGP <- function(X, y, XStar, hyperParam, sigmaNoise) {
     return(list(posterior_mean = posterior_mean, posterior_var = posterior_var))
     
 }
+```
 
 ### Part 2
 
-library("mvtnorm")
-
-SimGP <- function(m = 0,K,x,...){
-    # Simulates nSim realizations (function) form a Gaussian process with mean m(x) and covariance K(x,x')
-    # over a grid of inputs (x)
-    n <- length(x)
-    if (is.numeric(m)) meanVector <- rep(0,n) else meanVector <- m(x)
-    if (is.numeric(K)) covMat <- K else covMat <- K(x,x,...)
-    f <- rmvnorm(n, mean = meanVector, sigma = covMat)
-    return(f)
-}
+```{r}
 
 # Information for updating the prior
 
@@ -68,8 +71,12 @@ plot(x=xGrid,y=posteriorP2$posterior_mean, type="l",ylim=c(-2,2))
 lines(x=xGrid,y=upp_band, type="l",col="blue")
 lines(x=xGrid,y=low_band, type="l",col="blue")
 
+
+```
+
 ### Part 3
 
+```{r}
 # Update the information
 
 X_observations[2] <- -0.6
@@ -87,7 +94,11 @@ plot(x=xGrid,y=posteriorP3$posterior_mean, type="l",ylim=c(-2,2))
 lines(x=xGrid,y=upp_band3, type="l",col="blue")
 lines(x=xGrid,y=low_band3, type="l",col="blue")
 
+```
+
 ### Part 4
+
+```{r}
 X_observations[1] <- -1
 X_observations[3:5] <- c(-0.2,0.4,0.8)
 y_observations[3:5] <- c(-0.940, 0.719, -0.664)
@@ -104,8 +115,11 @@ plot(x=xGrid,y=posteriorP4$posterior_mean, type="l",ylim=c(-2,2))
 lines(x=xGrid,y=upp_band4, type="l",col="blue")
 lines(x=xGrid,y=low_band4, type="l",col="blue")
 
+```
+
 ### Part 5
 
+```{r}
 hyperParam5 <- list(sigmaF = 1, l = 1)
 
 posteriorP5 <- posteriorGP(X = X_observations, y = y_observations, XStar = xGrid, hyperParam = hyperParam5, sigmaNoise = 0.1)
@@ -120,16 +134,13 @@ plot(x=xGrid,y=posteriorP5$posterior_mean, type="l", ylim = c(-2,1))
 lines(x=xGrid,y=upp_band5, type="l",col="blue")
 lines(x=xGrid,y=low_band5, type="l",col="blue")
 
-### Question2
+```
+
+## Question 2
 
 ### Part 1
 
-#setwd( "C:/Users/Milda/Documents/Documents/Master degree/Adv Machine Learning/AdvML_Lab4")
-#install.packages('kernlab')
-#install.packages("AtmRay") # To make 2D grid like in Matlab's meshgrid
-library(kernlab)
-library(AtmRay)
-
+```{r}
 dataQ2 <- read.csv("TempTullinge.csv", header=TRUE, sep=";")
 time <- 1:2190
 day <- 1:365
@@ -157,18 +168,18 @@ MaternFunc = Matern32(sigmaf = 1, ell = 2)
 MaternFunc(1,2)
 
 # use the kernelMatrix function to compute the covariance matrix K(X;X*)
-#points <- matrix(c(1,3,4,2,3,4), ncol=2)
 x1 <- c(1,3,4)
 x2 <- c(2,3,4)
 
 covM <- kernelMatrix(MaternFunc, x1,x2)
 
-
-
+```
 
 ### Part 2
 
-## With the subsetted data
+```{r}
+
+# Subset data
 temp <- dataQ2$temp[Stime]
 # Find the noise value
 polyFit <- lm(temp ~  Stime + Stime^2)
@@ -182,9 +193,11 @@ postMean2 <- predict(GPfit,Stime)
 plot(Stime, temp, ylim=c(-30,40))
 lines(Stime,postMean2, col="red", lwd = 2)
 
+```
 
 ### Part 3
 
+```{r}
 x<-scale(Stime)
 xs<-scale(Stime) # XStar
 n <- length(x)
@@ -203,7 +216,11 @@ lines(Stime, postMean2 - 1.96*sqrt((diag(Covf) + sigmaNoise^2)), col = "purple")
 lines(Stime, postMean2 + 1.96*sqrt((diag(Covf) + sigmaNoise^2)), col = "purple")
 
 
+```
+
 ### Part 4
+
+```{r}
 # Find the noise value
 polyFit4 <- lm(temp ~  rep.int(Sday,6) )
 sigmaNoise4 = sd(polyFit4$residuals)
@@ -220,8 +237,11 @@ plot(Stime, temp)
 lines(Stime,postMean4, col="red", lwd = 2) #how and were to include the time variable?...
 
 
+```
+
 ### Part 5
 
+```{r}
 sd <- sqrt(var(time))
 d <- 365/sd
 # Function that returns kernel class object
@@ -243,48 +263,6 @@ plot(rep.int(Sday,6), temp)
 lines(rep.int(Sday,6),postMean4, col="red", lwd = 2) #how and were to include the time variable?...
 lines(rep.int(Sday,6),postMean5, col="blue", lwd = 2) #how and were to include the time variable?...
 
-## Question 3
+```
 
-# read data from github
-data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv",
-                 header=FALSE, sep=",")
-names(data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud")
-data[,5] <- as.factor(data[,5])
-head(data)
-set.seed(111); 
-SelectTraining <- sample(1:dim(data)[1], size = 1000,
-                                        replace = FALSE)
-training <- data[SelectTraining,]
-testing <- data[-SelectTraining,]
-### Part 1
-GPfitFraud <- gausspr(fraud ~ varWave + skewWave, data=training)
-
-# class probabilities 
-probPreds <- predict(GPfitFraud, training, type="probabilities")
-x1 <- seq(min(training[,1]),max(training[,1]),length=100)
-x2 <- seq(min(training[,2]),max(training[,2]),length=100)
-gridPoints <- meshgrid(x1, x2)
-gridPoints <- cbind(c(gridPoints$x), c(gridPoints$y))
-
-gridPoints <- data.frame(gridPoints)
-names(gridPoints) <- names(training)[1:2]
-probPreds <- predict(GPfitFraud, gridPoints, type="probabilities")
-
-# Plotting for Prob(setosa)
-contour(x1,x2,matrix(probPreds[,1],100,byrow = TRUE), 20, xlab = "Petal.Length", ylab = "Petal.Width", main = 'Prob(Setosa) - Setosa is red')
-points(training[training[,5]==0,1],training[training[,5]==0,2],col="blue")
-points(training[training[,5]==1,1],training[training[,5]==1,2],col="red")
-
-### Part 2
-
-# predict on the testing set
-predT <- predict(GPfitFraud,testing)
-table(predT, testing$fraud) # confusion matrix
-
-### Part 3
-GPfitFraud3 <- gausspr(fraud ~ ., data=training)
-
-# predict on the testing set
-pred3 <- predict(GPfitFraud3,testing)
-table(pred3, testing$fraud) # confusion matrix
 
