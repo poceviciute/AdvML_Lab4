@@ -1,27 +1,30 @@
-#### Advanced machine learning
+---
+title: '732A96 Lab 4: Gaussian Processes'
+author: "Fanny Karelius (fanka300)"
+date: "10 october 2018"
+output:
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(987654321)
+library(readr)
+library(kernlab)
+library(AtmRay)
+```
 
-# Lab 4
+# Question 1
 
-####################################### Question 1
-
-#a)
-
-conf_band <- function(pred_mean, pred_var){
-  upp_band <- pred_mean+qnorm(0.975)*sqrt(diag(pred_var))
-  low_band <- pred_mean-qnorm(0.975)*sqrt(diag(pred_var))
+##a)
+```{r, echo=FALSE}
+conf_band <- function(mean, var){
+  upp_band <- mean+qnorm(0.975)*sqrt(diag(var))
+  low_band <- mean-qnorm(0.975)*sqrt(diag(var))
   return(list(upper=upp_band, lower=low_band))
 }
+```
 
-# SE_kernel <- function(x1,x2,sigmaF,l){
-#   n1 <- length(x1)
-#   n2 <- length(x2)
-#   K <- matrix(NA,n1,n2)
-#   for (i in 1:n2){
-#     K[,i] <- sigmaF^2*exp(-0.5*( (x1-x2[i])/l)^2 )
-#   }
-#   return(K)
-# }
-
+```{r}
 SE_kernel <- function(sigmaf, ell){
   val <- function(x1, x2){
     n1 <- length(x1)
@@ -61,8 +64,12 @@ posteriorGP <- function(x, y, xStar, hyperParam, sigmaNoise){
   return(list("pred_mean"=fStar, "pred_var"=V))
 }
 
+```
 
-#b)
+
+##b)
+
+```{r}
 noise <- 0.1
 hyperParam <- list("sigmaF"=1, "l"=0.3)
 xGrid <- seq(-1,1,length=50)
@@ -71,45 +78,80 @@ obs1 <- list(x=0.4, y=0.719)
 post1<-posteriorGP(obs1$x, obs1$y, xGrid, hyperParam, noise)
 confband1 <- conf_band(post1$pred_mean, post1$pred_var)
 
-plot(xGrid, post1$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="b) One observation")
+```
+
+```{r, echo=FALSE}
+plot(xGrid, post1$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="One observation")
 lines(xGrid,confband1$upper, col="blue")
 lines(xGrid,confband1$lower, col="blue")
+legend(-1,1.5,c("posterior mean", "confidence bands"),
+       col = c("black","blue"), lty = c(1, 1), lwd=c(1, 1))
+
+```
 
 
-#c)
+##c)
+
+```{r}
 obs2 <- list(x=c(obs1$x,-0.6), y=c(obs1$y,-0.044))
 post2 <- posteriorGP(obs2$x, obs2$y, xGrid, hyperParam, noise)
 confband2 <- conf_band(post2$pred_mean, post2$pred_var)
 
-plot(xGrid, post2$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="c) Two observations")
+```
+
+```{r, echo=FALSE}
+plot(xGrid, post2$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="Two observations")
 lines(xGrid,confband2$upper, col="blue")
 lines(xGrid,confband2$lower, col="blue")
+legend(0.05,-1.4,c("posterior mean", "confidence bands"),
+       col = c("black","blue"), lty = c(1, 1), lwd=c(1, 1))
 
-#d)
+```
+
+
+##d)
+
+```{r}
 obs3 <- list(x=c(obs2$x, -1, -0.2, 0.8), y=c(obs2$y, 0.768, -0.94, -0.664))
 post3 <- posteriorGP(obs3$x, obs3$y, xGrid, hyperParam, noise)
 confband3 <- conf_band(post3$pred_mean, post3$pred_var)
 
-plot(xGrid, post3$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="d) Five observations")
+```
+
+```{r, echo=FALSE}
+plot(xGrid, post3$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="Five observations")
 lines(xGrid,confband3$upper, col="blue")
 lines(xGrid,confband3$lower, col="blue")
+legend("topright",c("posterior mean", "confidence bands"),
+       col = c("black","blue"), lty = c(1, 1), lwd=c(1, 1))
 
-#e)
+```
+
+
+##e)
+
+```{r}
 hyperParam2 <- list(sigmaF=1, l=1)
 post4 <- posteriorGP(obs3$x, obs3$y, xGrid, hyperParam2, noise)
 confband4 <- conf_band(post4$pred_mean, post4$pred_var)
 
-plot(xGrid, post4$pred_mean, type="l", ylim=c(-2,2), ylab="Posterior mean", xlab = "x", main="e) sigmaF=1, l=1")
+```
+
+```{r, echo=FALSE}
+plot(xGrid, post4$pred_mean, type="l", ylim=c(-1.5,1), ylab="Posterior mean", xlab = "x", main="sigmaF=1, l=1")
 lines(xGrid,confband4$upper, col="blue")
 lines(xGrid,confband4$lower, col="blue")
+legend("topright",c("posterior mean", "confidence bands"),
+       col = c("black","blue"), lty = c(1, 1), lwd=c(1, 1))
 
-####################################### Question 2
+```
 
-#a)
-library(readr)
-library(kernlab)
-library(AtmRay)
 
+# Question 2
+
+##a)
+
+```{r}
 TempTullinge <- read.csv("D:/LiU/732A96/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
 
 time <- 1:length(TempTullinge$date)
@@ -126,17 +168,31 @@ kernel_point1 <- kernel_func(point1[1], point1[2])
 x_vec <- c(1,3,4)
 xStar_vec <- c(2,3,4)
 k_cov1<-kernelMatrix(kernel = kernel_func, x = x_vec, y = xStar_vec)
+```
 
-#b)
+
+##b)
+
+```{r}
 lm_fit <- lm(temp~time+time^2, data = TempTullinge)
 sigma2n <- var(lm_fit$residuals)
 kernel_func2 <- SE_kernel(sigmaf=20, ell=0.2)
 gp_model <- gausspr(fTime,temp,data=TempTullinge, kernel=kernel_func2, var=sigma2n)
 post_mean <- predict(gp_model, fTime)
-plot(fTime, temp, ylim=c(-30,35))
-lines(fTime,post_mean, col="blue", lwd=2)
 
-#c)
+```
+
+```{r, echo=FALSE}
+plot(fTime, temp, pch=20, main="Posterior mean of f", xlab="Time")
+lines(fTime,post_mean, col="blue", lwd=2)
+legend("bottomright",c("observations", "posterior mean (time)"),
+       col = c("black","blue"), lty = c(3, 1), lwd=c(3, 1))
+
+```
+
+##c)
+
+```{r}
 x <- scale(fTime)
 xs <- scale(fTime)
 n <- length(fTime)
@@ -145,16 +201,26 @@ Kxx <- kernelMatrix(kernel = kernel_func2, x = x, y = x)
 Kxs <- kernelMatrix(kernel = kernel_func2, x = x, y = xs)
 Covf = Kss-t(Kxs)%*%solve(Kxx + sigma2n*diag(n), Kxs) # Covariance matrix of fStar
 
+```
+
+```{r, echo=FALSE}
 # Probability intervals for fStar
-lines(fTime, post_mean - 1.96*sqrt(diag(Covf)), col = "darkgreen", lwd=2)
-lines(fTime, post_mean + 1.96*sqrt(diag(Covf)), col = "darkgreen", lwd=2)
-
+plot(fTime, temp, ylim=c(-30,35), pch=20, main="Posterior mean of f", xlab="Time")
+lines(fTime,post_mean, col="blue", lwd=2)
+lines(fTime, post_mean - 1.96*sqrt(diag(Covf)), col = "purple", lwd=2)
+lines(fTime, post_mean + 1.96*sqrt(diag(Covf)), col = "purple", lwd=2)
 # Prediction intervals for yStar
-lines(fTime, post_mean - 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2)
-lines(fTime, post_mean + 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2)
+lines(fTime, post_mean - 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2, lty=2)
+lines(fTime, post_mean + 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2, lty=2)
+legend("bottomright",c("posterior mean (time)", "confidence bands"),
+       col = c("blue","purple"), lty = c(1, 5), lwd=c(1, 1))
+
+```
 
 
-#d)
+##d)
+
+```{r}
 fDay_rep <- rep(fDay,6)
 lm_fit2 <- lm(temp~fDay_rep+fDay_rep^2)
 sigma2n_day <- var(lm_fit2$residuals)
@@ -162,12 +228,26 @@ kernel_func3 <- SE_kernel(sigmaf=20, ell=1.2)
 gp_model2 <- gausspr(fDay_rep,temp,data=TempTullinge, kernel=kernel_func3, var=sigma2n_day)
 post_mean2 <- predict(gp_model2, fDay_rep)
 
+```
 
+```{r, echo=FALSE}
+plot(fTime, temp, ylim=c(-30,35), pch=20, main="Posterior mean of f", xlab="Time")
+lines(fTime,post_mean, col="blue", lwd=2)
+lines(fTime, post_mean - 1.96*sqrt(diag(Covf)), col = "purple", lwd=2)
+lines(fTime, post_mean + 1.96*sqrt(diag(Covf)), col = "purple", lwd=2)
+# Prediction intervals for yStar
+lines(fTime, post_mean - 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2, lty=2)
+lines(fTime, post_mean + 1.96*sqrt((diag(Covf) + sigma2n)), col = "purple", lwd=2, lty=2)
 lines(fTime,post_mean2, col="red", lwd=2)
+legend("bottomright",c("posterior mean (day)"),
+       col = c("red"), lty = c(1), lwd=c(1))
+
+```
 
 
-#e)
+##e)
 
+```{r}
 periodic_kernel <- function(sigmaf, ell1, ell2, d){
   val <- function(x1, x2){
     n1 <- length(x1)
@@ -186,12 +266,23 @@ periodic_k <- periodic_kernel(20, 1, 10, 365/sd(time))
 gp_model3 <- gausspr(fTime,temp,data=TempTullinge, kernel=periodic_k, var=sigma2n_day)
 post_mean3 <- predict(gp_model3, fTime)
 
+```
 
+```{r, echo=FALSE}
+plot(fTime, temp, pch=20, main="Posterior mean of f", xlab="Time")
+lines(fTime,post_mean, col="blue", lwd=2)
+lines(fTime,post_mean2, col="red", lwd=2)
 lines(fTime,post_mean3, col="green", lwd=2)
+legend("bottomright",c("posterior mean (time)","posterior mean (day)","posterior mean (periodic)"),
+       col = c("blue","red","green"), lty = c(1, 1, 1), lwd=c(1, 1, 1))
+
+```
 
 
-####################################### Question 3
 
+# Question 3
+
+```{r}
 fraud_data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
 names(fraud_data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud") 
 fraud_data[,5] <- as.factor(fraud_data[,5])
@@ -199,32 +290,56 @@ set.seed(111)
 SelectTraining <- sample(1:dim(fraud_data)[1], size = 1000, replace = FALSE)
 fraud_train <- fraud_data[SelectTraining,]
 fraud_test <- fraud_data[-SelectTraining,]
+```
 
-#a)
 
+##a)
+
+```{r, message=FALSE}
 gp_fraud1 <- gausspr(fraud~varWave+skewWave, data=fraud_train)
 x1 <- seq(min(fraud_data$varWave),max(fraud_data$varWave),length=100)
 x2 <- seq(min(fraud_data$skewWave),max(fraud_data$skewWave),length=100)
 fraud_grid <- meshgrid(x1,x2)
 grid_points <- data.frame(cbind(c(fraud_grid$x), c(fraud_grid$y)))
-#grid_points <- data.frame(rbind("varWave"=fraud_grid$x, "skewWave"=fraud_grid$y))
 names(grid_points) <- c("varWave","skewWave")
 probPreds1 <- predict(gp_fraud1, grid_points, type="probabilities")
 
+```
+
+```{r, echo=FALSE}
 contour(x1,x2,matrix(probPreds1[,1], 100, byrow = TRUE), xlab = "varWave", ylab = "skewWave", main = 'Prob(fraud) - fraud is blue')
 points(fraud_train[fraud_train$fraud==0,"varWave"],fraud_train[fraud_train$fraud==0,"skewWave"],col="red",pch=20)
 points(fraud_train[fraud_train$fraud==1,"varWave"],fraud_train[fraud_train$fraud==1,"skewWave"],col="blue",pch=20)
 
-conf_mat1<-table(predict(gp_fraud1, fraud_train[,1:2]), fraud_train$fraud)
+conf_mat1<-table("Prediction"=predict(gp_fraud1, fraud_train[,1:2]), "True"=fraud_train$fraud)
 accuracy1<-sum(diag(conf_mat1))/sum(conf_mat1)
+conf_mat1
+accuracy1
 
-#b)
+```
 
-conf_mat2<-table(predict(gp_fraud1, fraud_test[,1:2]), fraud_test$fraud)
+##b)
+
+```{r}
+conf_mat2<-table("Prediction"=predict(gp_fraud1, fraud_test[,1:2]), "True"=fraud_test$fraud)
 accuracy2<-sum(diag(conf_mat2))/sum(conf_mat2)
+conf_mat2
+accuracy2
+```
 
-#c)
 
+##c)
+
+```{r, message=FALSE}
 gp_fraud2 <- gausspr(fraud~., data=fraud_train)
-conf_mat3<-table(predict(gp_fraud2, fraud_test), fraud_test$fraud)
+conf_mat3<-table("Prediction"=predict(gp_fraud2, fraud_test), "True"=fraud_test$fraud)
 accuracy3<-sum(diag(conf_mat3))/sum(conf_mat3)
+conf_mat3
+accuracy3
+```
+
+
+#Appendix
+
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
