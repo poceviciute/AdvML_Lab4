@@ -3,6 +3,7 @@ title: "AML_Lab4_Group8"
 author: "Hyungyum Kim, Milda Poceviciute, Boxi Zhang, Fanny Karelius"
 date: "17 october 2018"
 output:
+  pdf_document: default
   html_document: default
 ---
 ```{r setup, include=FALSE}
@@ -36,7 +37,7 @@ The function is called posteriorGP and has following inputs:
 - sigmaNoise: Noise  standard deviation $\sigma_n$.
 
 
-```{r}
+```{r,eval=TRUE}
 SE_kernel <- function(sigmaf, ell){
   val <- function(x1, x2){
     n1 <- length(x1)
@@ -178,7 +179,7 @@ For this exercise, data of daily mean temperatures in Tullinge are used.
 
 
 ```{r}
-TempTullinge <- read.csv("D:/LiU/732A96/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
+TempTullinge <- read.csv("TempTullinge.csv", header=TRUE, sep=";")
 
 time <- 1:length(TempTullinge$date)
 day <- 1:365
@@ -187,7 +188,6 @@ fDay <- seq(from=day[1], to=day[length(day)], by = 5)
 temp <- TempTullinge$temp[fTime]
 
 
-#What sigmaf and ell??
 kernel_func <- SE_kernel(sigmaf=1, ell=0.3)
 point1 <- c(1,2)
 kernel_point1 <- kernel_func(point1[1], point1[2])
@@ -377,7 +377,7 @@ conf_mat1<-table("Prediction"=predict(gp_fraud1, fraud_train[,1:2]), "True"=frau
 accuracy1<-sum(diag(conf_mat1))/sum(conf_mat1)
 
 ```
-
+\newpage
 The confusion matrix and accuracy rate are given by
 
 ```{r, echo=FALSE}

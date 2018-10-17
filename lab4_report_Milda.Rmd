@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 library(kernlab)
 library(AtmRay)
 set.seed(12345)
@@ -291,7 +291,7 @@ GPfit4 <- gausspr(rep.int(Sday,6), temp, kernel = MaternFunc2, var = sigmaNoise4
 postMean4 <- predict(GPfit4,rep.int(Sday,6))
 ```
 
-From the plot, we see that both models performed quite well and the posterior means follow closely the seasonality of the temperatures. The _Time_ model was fitting to the all observed information, hence it shows the overall trend of the temperature fluctuations over the whole time period. The _Day_ model captures the seasonality during the year well, as the variable $1,2,...,365$ was repeated 6 times and fitted with the temperatures, it fits exactly the same curve 6 times.
+From the plot, we see that both models performed quite well and the posterior means follow closely the seasonality of the temperatures. The _Time_ model was fitting to the all observed information, hence it shows the overall trend of the temperature fluctuations over the whole time period. The _Day_ model captures the seasonality during the year, as the variable $1,2,...,365$ was repeated 6 times and fitted with the temperatures. It fits exactly the same curve 6 times.
 
 
 ```{r}
@@ -306,28 +306,31 @@ legend("topright",c("Observations","Post. Mean(time)","Post. Mean(day)"),
 
 ### Part 5
 
-The GP with a generalization of the periodic kernel is used in this part to model the temperature against the time.
+The GP with a generalization of the periodic kernel is used in this part to model the temperature against the time. The periodic kernel is given by:
+$$k(x,x')=\sigma_f^2\exp{\{-\frac{2\sin^2(pi|x-x'|)/d}{\ell_1^2}\}}\exp{\{-\frac{|x-x'|^2}{2\ell_2^2}\}}$$
 
 ```{r}
-sd <- sqrt(var(time))
-d <- 365/sd
 # Function that returns kernel class object
-Matern5 <- function(sigmaf = 1, ell1 = 1, ell2 = 1) 
-{
-  rval <- function(x, y = NULL) {
-    r = sqrt(crossprod(x-y));
-    return(sigmaf^2*exp( -2*(sin(pi*abs(x-y)/d))^2/ell1)*exp(-0.5*(x-y)^2/ell2))
+Matern5 <- function(sigmaf, ell1, ell2, d){
+  val <- function(x1, x2){
+    n1 <- length(x1)
+    n2 <- length(x2)
+    K <- matrix(NA,n1,n2)
+    for (i in 1:n2){
+      K[,i] <- sigmaf^2*exp(-2*sin(pi*abs(x1-x2[i])/d)^2/ell1^2)*exp(-0.5*abs(x1-x2[i])^2/ell2^2)
+    }
+    return(K)
   }
-  class(rval) <- "kernel"
-  return(rval)
-} 
+  class(val) <- "kernel"
+  return(val)  
+}
 
-MaternFunc5 = Matern5(sigmaf = 20, ell1 = 1, ell2=10)
-GPfit5 <- gausspr(rep.int(Sday,6), temp, kernel = MaternFunc5, var = sigmaNoise4^2)
-postMean5 <- predict(GPfit5,rep.int(Sday,6))
+MaternFunc5 <- Matern5(20, 1, 10, 365/sd(time))
+GPfit5 <- gausspr(Stime, temp, kernel = MaternFunc5, var = sigmaNoise^2)
+postMean5 <- predict(GPfit5,Stime)
 ```
 
-From the plot, we see that the posterior mean from _Time_ model predicts the underlying trends over all time period, the _Day_ model is good at capturing the yearly seasonality. The _Periodic_ model of this part seems to be performing quite well too. This is reasonable as the temperature data is a periodic data.
+From the plot, we see that the posterior mean from _Time_ model predicts the underlying trends over all time period, the _Day_ model is good at capturing the yearly seasonality. The _Periodic_ model of this part seems to be performing quite well too. It seems the model with periodic kernel captures the overall trend as the model with the squared kernel with variable _Time_. But also it shows the average year seasonality as the model with squared kernel and variable _Day_. Since periodic kernel has one more length scale which controls the correlation between the same day in different years, this result looks reasonable. 
 
 ```{r}
 plot(Stime, temp,ylim=c(-30,45),xlab="time",ylab="temperature")
