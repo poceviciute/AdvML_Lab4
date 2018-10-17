@@ -382,7 +382,7 @@ The model gives the corresponding confusion matrix on the training data:
 ```{r}
 # predict on the testing set
 pred1 <- predict(GPfitFraud,training)
-conM1 <- table(pred1, training$fraud) # confusion matrix
+conM1 <- table("Prediction"=pred1, "True"=training$fraud) # confusion matrix
 conM1
 
 ```
@@ -405,7 +405,7 @@ The confusion matrix on the testing data is:
 ```{r}
 # predict on the testing set
 predT <- predict(GPfitFraud,testing)
-conM2 <- table(predT, testing$fraud) # confusion matrix
+conM2 <- table("Prediction"=predT, "True"=testing$fraud) # confusion matrix
 conM2
 
 
@@ -423,12 +423,12 @@ GPfitFraud3 <- gausspr(fraud ~ ., data=training)
 
 # predict on the testing set
 pred3 <- predict(GPfitFraud3,testing)
-conM3 <- table(pred3, testing$fraud) # confusion matrix
+conM3 <- table("Prediction"=pred3, "True"= testing$fraud) # confusion matrix
 conM3
 
 ```
 
-The accuracy is `r accuracy(conM3)`, which is higher than in the previous parts. It is reasonable that the classification model improved once we included all the available information. 
+The accuracy is `r accuracy(conM3)`, which is higher than in the previous parts, and very close to 1. It is reasonable that the classification model improved once we included all the available information. 
 
 #Appendix
 
