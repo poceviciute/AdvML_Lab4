@@ -150,7 +150,7 @@ lines(xGrid, gpsim3[[1]]-1.96*sqrt(gpsim3[[2]]), col = "red", lwd = 3)
 grid()
 ```
 
-Above plot shows the result of Gaussian process when the value of parameter $l$(ell) = 1. Compared to the previous step 1-4. it is obvious that the posterior mean plot is much more smoothed than before$l=0.3$. This result makes sense because  relatively high value of $l$ allows the kernel to yield high correlation of inputs.
+Above plot shows the result of Gaussian process when the value of parameter $l$(ell) = 1. Compared to the previous step 1-4. it is obvious that the posterior mean plot is much more smoothed than before $l=0.3$. This result makes sense because  relatively high value of $l$ allows the kernel to yield high correlation of inputs.
 
 \clearpage
 
@@ -438,7 +438,6 @@ list(Confusion_matrix=conf_mat3, Accuracy=acc3)
 ```
 
 Here, the accuracy is 0.9973118 which are very close to 1 and actually there was only one misclassification. The result with only two covariates was not bad since the accuracy was 0.9354839, but obviously result  gets better when all covariates are considered. 
-
 
 
 
