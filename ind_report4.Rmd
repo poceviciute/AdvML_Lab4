@@ -3,6 +3,7 @@ title: '732A96 Lab 4: Gaussian Processes'
 author: "Fanny Karelius (fanka300)"
 date: "17 october 2018"
 output:
+  word_document: default
   html_document: default
 ---
 ```{r setup, include=FALSE}
@@ -26,17 +27,22 @@ conf_band <- function(mean, var){
 }
 ```
 
-For the first exercise, the following Gaussian process regression model will be implemented:
+The following Gaussian process regression model was implemented:
 
 $$ y = f(x) + \epsilon, \ \ \epsilon \sim N(0, \sigma_n^2), \ \  f \sim GP(0, k(x,x^\prime))$$
-The function is called posteriorGP and has following inputs:
 
-- X: Vector of training inputs.
-- y: Vector of training targets/outputs.
-- XStar: Vector of inputs where the posterior distribution is evaluated. i.e. $X_{\star}$.
-- hyperParam: Vector with two elements, $\sigma_f$ and $\ell$.
-- sigmaNoise: Noise  standard deviation $\sigma_n$.
+The function posteriorGP has the inputs:
 
+- x: Vector of training points
+- y: Vector of training targets
+- xStar: Vector of inputs where the posterior distribution is to be evaluated ($X_{\star}$)
+- hyperParam: List of two hyper parameters, $\sigma_f$ and $\ell$
+- sigmaNoise: Noise (standard deviation $\sigma_n$)
+
+The kernel used was the squared exponential kernel given by:
+$$k(x,x_*)=\sigma_f^2\exp\{-\frac{1}{2}\left(\frac{x-x_*}{\ell}\right)^2\}$$
+
+The output of the posteriorGP function is the posterior mean of $f$ and the posterior variance of $f$.
 
 ```{r}
 ############### 2.1
@@ -85,7 +91,7 @@ posteriorGP <- function(x, y, xStar, hyperParam, sigmaNoise){
 
 ##2
 
-In this part we assume that prior hyper parameters are $\sigma_f = 1$, $\ell = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean, and the 95% probability bands (point wise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the $x$ grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and the bands become narrower.
+The hyper parameters used are $\sigma_f = 1$, $\ell = 0.3$. The posterior was updated with one observation $(x,y)=(0.4,0.719)$. $\sigma_n$ was assumed to be $\sigma_n=0.1$. 
 
 ```{r}
 #2
@@ -109,10 +115,12 @@ legend("topleft",c("posterior mean", "probability bands", "observation"),
 
 ```
 
+The plot shows the posterior mean and the 95% point wise probability bands plotted over a grid $[-1,1]$.
+The probability bands are very wide except for where the observation is because the uncertainty has decreased here.
 
 ##3
 
-The posterior is updated with one more observation $(x,y)=(-0.6,-0.044)$. The plot below shows again the observations, the posterior mean, and the 95% (point wise) probability bands over the grid $[-1,1]$. This time the uncertainty is smaller for the two observed $x$ values: the probability bands are narrower there.
+The posterior was updated with one more observation $(x,y)=(-0.6,-0.044)$. 
 
 ```{r}
 #3
@@ -133,10 +141,12 @@ legend("topright",c("posterior mean", "probability bands", "observations"),
 
 ```
 
+The plot shows the posterior mean and the 95% point wise probability bands plotted over a grid $[-1,1]$.
+The probability bands are again very wide except for where the observations are because the uncertainty has decreased here.
 
 ##4
 
-The plot shows the posterior mean and the 95% probability bands after 5 observations. The uncertainty has decreased a lot compared to when we only had one and two observations (as indicated by the decreased width of the probability bands).
+The plot below shows the posterior mean and the 95% probability bands after the posterior has been updated with 3 more observations. The uncertainty has decreased more compared to when we only had one and two observations (as indicated by the decreased width of the probability bands).
 
 ```{r, results="asis"}
 #4
@@ -159,7 +169,7 @@ legend("topright",c("posterior mean", "probability bands"),
 
 ##5
 
-The plot below shows the posterior mean and the 95% probability bands after 5 observations as in part 4, but changing the hyper parameters to $\sigma_f = 1$, $\ell = 1$. The higher the $\ell$ value, the smoother the posterior mean becomes. In the kernel, the distance between the points is divided by $\ell$. This means that a higher value of this hyper parameter makes the  kernel values converge to $\sigma_f$: the distance between the observations becomes less and less important. Hence, the posterior mean becomes more smooth.
+The plot below shows the posterior mean and the 95% probability bands after 5 observations as in part 4, but here the hyper parameters were $\sigma_f = 1$, $\ell = 1$. 
 
 ```{r}
 #5
@@ -178,6 +188,7 @@ legend("topright",c("posterior mean", "probability bands"),
 
 ```
 
+As can be seen in the plot (when compared to the plot in part 4), the posterior mean becomes smoother with a higher $\ell$ value. This is because the distance between the points is divided by $\ell$ in the kernel and when $\ell$ becomes larger the exponential will go to 1 and the kernel value will go to $\sigma_f$. Thus, the distance between the points will have less influence on the kernel value and the posterior mean becomes smoother.
 
 # Question 2.2 GP Regression with _kernlab_
 
@@ -235,8 +246,6 @@ post_mean <- predict(gp_model, fTime)
 ```
 
 
-The plot below shows the observations plotted with a fitted posterior mean. The model fits the data quite well as it predicts the underlying trends (periodicity).
-
 ```{r, echo=FALSE}
 plot(fTime, temp, pch=20, main="Posterior mean of f", xlab="Time")
 lines(fTime,post_mean, col="blue", lwd=2)
@@ -244,6 +253,8 @@ legend("bottomright",c("observations", "posterior mean (time)"),
        col = c("black","blue"), pch=c(20,-1), lty = c(0, 1), lwd=c(0, 1))
 
 ```
+
+The plot shows the observations plotted with the fitted posterior mean. The posterior mean fits the data quite well. It predicts the trends of the data (the periodicity).
 
 ##3
 
@@ -259,7 +270,6 @@ Covf = Kss-t(Kxs)%*%solve(Kxx + sigma2n*diag(n), Kxs) # Covariance matrix of fSt
 
 ```
 
-From the plot below, we see that the probability and prediction bands fit the data quite well. Though, the prediction bands are quite wide.
 
 ```{r, echo=FALSE}
 plot(fTime, temp, ylim=c(-40,35), pch=20, main="Posterior mean of f", xlab="Time")
@@ -275,6 +285,7 @@ legend("bottomright",c("posterior mean (time)", "probability bands","prediction 
 
 ```
 
+The plot shows the observations, posterior mean, the probability and prediction bands. The probability and prediction bands fit the data well, but the prediction bands are very wide and enclose all observations.
 
 ##4
 
@@ -307,16 +318,17 @@ legend("bottomright",c("posterior mean (time)","posterior mean (day)"),
 
 The model with prediction variable $time$ shows a more smooth posterior mean curve than the model with prediction variable $day$.
 The posterior mean for $day$ captures the seasonal trend of the temperature (as the $day=1,2,...,365$ variable is replicated 6 times), but the posterior mean for $time$ captures the overall trend of temperature. 
-Briefly, it is better to use the $time$ model to see changes overtime and better to use the $day$ model to see general seasonal trends within a year.
+It seems that it is better to use the model with $time$ as predictor to see the overall change of temperature whereas it is better to use the model with $day$ as predictor to see the how the temperature changes within a year.
+
 
 ##5
 
-The GP with a generalization of the periodic kernel is used in this part to model the temperature against time.
+A GP with a generalization of the periodic kernel was used to model the temperature against time.
 
 The periodic kernel is given by:
 $$k(x,x')=\sigma_f^2\exp{\{-\frac{2\sin^2(pi|x-x'|)/d}{\ell_1^2}\}}\exp{\{-\frac{|x-x'|^2}{2\ell_2^2}\}}$$
 
-The hyper parameters used in the kernel were $\sigma_f=20, \ell_1=1, \ell_2=10, d=365/sd(time)$.
+The hyper parameters used in the kernel were $\sigma_f=20, \ell_1=1, \ell_2=10, d=365/\text{sd}(time)$.
 
 ```{r}
 #5
@@ -350,7 +362,9 @@ legend("bottomright",c("posterior mean (time)","posterior mean (day)","posterior
 
 ```
 
-From the plot, it seems that the model with periodic kernel captures more within year seasonality than the model with squared exponential kernel with variable $time$ and also shows more overall trend of temperature than the model with squared exponential kernel with variable $day$. Since the periodic kernel has one more length scale, which controls the correlation between the same day in different years, this result looks reasonable.
+From the plot above, it seems that the periodic kernel model captures how the temperature changes within a year for each year instead of just one year as with the squared exponential kernel model with $day$ as predictor. The periodic kernel has one more lenght scale that controls how much the distance bewteen the same day in different years should influence the kernel value.
+
+It also seems that the periodic kernel model captures the seasonality of the data more than the model with $time$ as predictor (and squared exponential kernel).
 
 # Question 2.3 GP Classification with kernlab
 
@@ -414,7 +428,7 @@ conf_mat2
 accuracy2
 ```
 
-The accuracy is `r accuracy2`, which is pretty close to the accuracy rate obtained on the training data. This is a good indication that the classification works well and that the model is not over fitting the training data.
+The accuracy is `r accuracy2`, which is pretty close to the accuracy rate obtained on the training data. This is indications that the model is not over fitting the training data. The accuracy rate is also quite high in both cases so the model is working well.
 
 ##3
 
@@ -434,7 +448,7 @@ conf_mat3
 accuracy3
 ```
 
-Here, the accuracy is very close to 1, and there was only one misclassification. The result with only two covariates was not bad since the accuracy was `r accuracy2`, but obviously the result is better when all covariates are considered. 
+Here, the accuracy is very close to 1. The result with only two covariates was not bad since the accuracy was `r accuracy2`, but the result is better when all covariates are considered because we use all information available.
 
 #Appendix
 
