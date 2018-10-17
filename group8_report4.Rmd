@@ -301,6 +301,11 @@ Briefly, it is better to use the $time$ model to see changes overtime and better
 
 The GP with a generalization of the periodic kernel is used in this part to model the temperature against time.
 
+The periodic kernel is given by:
+$$k(x,x')=\sigma_f^2\exp{\{-\frac{2\sin^2(pi|x-x'|)/d}{\ell_1^2}\}}\exp{\{-\frac{|x-x'|^2}{2\ell_2^2}\}}$$
+
+The hyper parameters used in the kernel were $\sigma_f=20, \ell_1=1, \ell_2=10, d=365/\text{sd}(time)$.
+
 ```{r}
 periodic_kernel <- function(sigmaf, ell1, ell2, d){
   val <- function(x1, x2){
