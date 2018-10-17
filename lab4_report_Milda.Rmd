@@ -54,7 +54,7 @@ posteriorGP <- function(X, y, XStar, hyperParam, sigmaNoise) {
 
 ### Part 2
 
-In this part we assume that prior hyperparameters are $\sigma_f = 1$, $l = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean (the black line), and the 95% probability bands (pointwise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the x grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and bands become narrower.
+In this part we assume that prior hyper-parameters are $\sigma_f = 1$, $\ell = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean (the black line), and the 95% probability bands (point-wise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the x grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and bands become narrower.
 
 ```{r}
 
@@ -87,7 +87,7 @@ legend("topright",c("Observations","Prob. bands","Post. Mean"),
 
 ### Part 3
 
-The posterior is updated with one more observation $(x,y)=(-0.6,-0.044)$. The plot below shows again the observations, the posterior mean(the black line), and the 95% probability bands (pointwise) over the grid $[-1,1]$. This time the uncertainty is smaller for the two observed $x$ values: the probability bands are narrower there.
+The posterior is updated with one more observation $(x,y)=(-0.6,-0.044)$. The plot below shows again the observations, the posterior mean(the black line), and the 95% probability bands (point-wise) over the grid $[-1,1]$. This time the uncertainty is smaller for the two observed $x$ values: the probability bands are narrower there.
 
 ```{r}
 # Update the information
@@ -140,7 +140,7 @@ legend("topright",c("Prob. bands","Post. Mean"),
 
 ### Part 5
 
-The plot below shows the posterior mean and the 95% probability bands after having the 5 observations as in part 4, but changing the hyperparameters to $\sigma_f = 1$, $l = 1$. The higher the $l$ value, the smoother the posterior mean becomes. In the kernel the distance between the points is devided by $l$. This means that the higher the value of this hyperparameter is, the  kernel values converge to the $\sigma_f$: the distance between the observations becomes less and  less important. Hence, the posterior mean becomes more smooth.
+The plot below shows the posterior mean and the 95% probability bands after having the 5 observations as in part 4, but changing the hyper-parameters to $\sigma_f = 1$, $\ell = 1$. The higher the $\ell$ value, the smoother the posterior mean becomes. In the kernel the distance between the points is divided by $\ell$. This means that the higher the value of this hyper-parameter is, the  kernel values converge to the $\sigma_f$: the distance between the observations becomes less and  less important. Hence, the posterior mean becomes more smooth.
 
 ```{r}
 hyperParam5 <- list(sigmaF = 1, l = 1)
@@ -199,7 +199,7 @@ Matern32 <- function(sigmaf = 1, ell = 1)
 MaternFunc = Matern32(sigmaf = 1, ell = 2)
 ```
 
-It is used to compute the kernel fisrtly between (1,2), and afterwards between points $x=(1,3,4)$ and $x^*=(2,3,4)$. The results are printed:
+It is used to compute the covariance, firstly between (1,2), and afterwards between points $x=(1,3,4)$ and $x^*=(2,3,4)$. The results are printed:
 ```{r}
 
 #evaluate it in the point x = 1; x' = 2
@@ -233,7 +233,7 @@ GPfit <- gausspr(Stime, temp, kernel = MaternFunc2, var = sigmaNoise^2)
 postMean2 <- predict(GPfit,Stime)
 ```
 
-The plot below shows the observations plotted with a fitted posterior mean. The model fits the data quite well as it predicts the underlying trends (periodicity).
+The plot below shows the observations plotted with a fitted posterior mean at each data point. The model fits the data quite well as it predicts the underlying trends (periodicity).
 
 ```{r}
 plot(Stime, temp, ylim=c(-30,40),xlab="time",ylab="temperature")
@@ -291,15 +291,16 @@ GPfit4 <- gausspr(rep.int(Sday,6), temp, kernel = MaternFunc2, var = sigmaNoise4
 postMean4 <- predict(GPfit4,rep.int(Sday,6))
 ```
 
-From the plot, we see that the model performed quite well and the posterior mean follows closely the seasonality of the temperatures. However, it seems that the model in part 3 was a bit better at capturing the outliers.???
+From the plot, we see that both models performed quite well and the posterior means follow closely the seasonality of the temperatures. The _Time_ model was fitting to the all observed information, hence it shows the overall trend of the temperature fluctuations over the whole time period. The _Day_ model captures the seasonality during the year well, as the variable $1,2,...,365$ was repeated 6 times and fitted with the temperatures, it fits exactly the same curve 6 times.
 
 
 ```{r}
 
 plot(Stime, temp,xlab="time",ylab="temperature",ylim=c(-30,45))
-lines(Stime,postMean4, col="red", lwd = 2)
-legend("topright",c("Observations","Post. Mean"),
-        col = c("black","red"), pch = c(1,-1), lty = c(0, 1), lwd=c(0,2))
+lines(Stime,postMean2, col="red", lwd = 2)
+lines(Stime,postMean4, col="blue", lwd = 2)
+legend("topright",c("Observations","Post. Mean(time)","Post. Mean(day)"),
+        col = c("black","red", "blue"), pch = c(1,-1,-1), lty = c(0, 1,1), lwd=c(0,2,2))
 
 ```
 
@@ -326,18 +327,19 @@ GPfit5 <- gausspr(rep.int(Sday,6), temp, kernel = MaternFunc5, var = sigmaNoise4
 postMean5 <- predict(GPfit5,rep.int(Sday,6))
 ```
 
-From the plot, we see that the posterior mean from Part 4predicts the underlying trends in the data better than the posterior mean from Part 5.
+From the plot, we see that the posterior mean from _Time_ model predicts the underlying trends over all time period, the _Day_ model is good at capturing the yearly seasonality. The _Periodic_ model of this part seems to be performing quite well too. This is reasonable as the temperature data is a periodic data.
 
 ```{r}
 plot(Stime, temp,ylim=c(-30,45),xlab="time",ylab="temperature")
-lines(Stime,postMean4, col="red", lwd = 2) 
-lines(Stime,postMean5, col="blue", lwd = 2) 
-legend("topright",c("Observations","Post. Mean P4","Post. Mean P5"),
-        col = c("black","red","blue"), pch = c(1,-1,-1), lty = c(0, 1,1), lwd=c(0,2,2))
+lines(Stime,postMean2, col="red", lwd = 2)
+lines(Stime,postMean4, col="blue", lwd = 2) 
+lines(Stime,postMean5, col="green", lwd = 2) 
+legend("topright",c("Observations","Post. Mean(time)","Post. Mean(day)","Post. Mean(periodic)"),
+        col = c("black","red","blue","green"), pch = c(1,-1,-1,-1), lty = c(0, 1,1,1), lwd=c(0,2,2,2))
 ```
 
 
-## QUestion 3
+## Question 3
 
 ```{r}
 # read data from github
@@ -357,7 +359,7 @@ accuracy <- function (conf_mat){(conf_mat[1,1] + conf_mat[2,2]) / sum(conf_mat)}
 
 ### Part 1
 
-The package _kenrlab_ is used to fit the Gaussian Process Classification on Fraud dataset.
+The package _kenrlab_ is used to fit the Gaussian Process Classification on Fraud data-set.
 
 
 ```{r,message=FALSE,warning=FALSE}
@@ -376,7 +378,7 @@ probPreds <- predict(GPfitFraud, gridPoints, type="probabilities")
 
 ```
 
-The model gives the corresponding confussion matrix on the training data: 
+The model gives the corresponding confusion matrix on the training data: 
 ```{r}
 # predict on the testing set
 pred1 <- predict(GPfitFraud,training)
@@ -385,7 +387,7 @@ conM1
 
 ```
 
-Hence, the accuracy is `r accuracy(conM1)`. From the plot below, we see that clasifier works quite well and there are two contour peaks that concentrate the most of the points from the different class. However, the overlap region is quite big, and that explains the lower accuracy rate of the classifier.
+Hence, the accuracy is `r accuracy(conM1)`. From the plot below, we see that classifier works quite well and there are two contour peaks that concentrate the most of the points from the different class. However, the overlap region is quite big, and that explains the lower accuracy rate of the classifier.
 
 ```{r}
 # Plotting for Prob(setosa)
@@ -410,9 +412,11 @@ conM2
 ```
 
 
-The accuracy is `r accuracy(conM2)`, which is pretty close to the accuracy rate obtained on teh training data. This is a good indication that the classification works well.
+The accuracy is `r accuracy(conM2)`, which is pretty close to the accuracy rate obtained on the training data. This is a good indication that the classification works well.
 
 ### Part 3
+
+In this part all available information in the data-set is used to classify the fraud. The resulting confusion matrix on the test data is:
 
 ```{r}
 GPfitFraud3 <- gausspr(fraud ~ ., data=training)
@@ -420,12 +424,16 @@ GPfitFraud3 <- gausspr(fraud ~ ., data=training)
 # predict on the testing set
 pred3 <- predict(GPfitFraud3,testing)
 conM3 <- table(pred3, testing$fraud) # confusion matrix
-
-accuracy(conM1)
-accuracy(conM2)
-accuracy(conM3)
+conM3
 
 ```
 
+The accuracy is `r accuracy(conM3)`, which is higher than in the previous parts. It is reasonable that the classification model improved once we included all the available information. 
+
+#Appendix
+
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+
+```
 
 
