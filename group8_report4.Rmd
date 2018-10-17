@@ -13,9 +13,9 @@ library(kernlab)
 library(AtmRay)
 ```
 
-# Question 1
+# Question 2.1
 
-##a)
+##1
 ```{r, echo=FALSE}
 conf_band <- function(mean, var){
   upp_band <- mean+qnorm(0.975)*sqrt(diag(var))
@@ -32,7 +32,7 @@ The function is called posteriorGP and has following inputs:
 - X: Vector of training inputs.
 - y: Vector of training targets/outputs.
 - XStar: Vector of inputs where the posterior distribution is evaluated. i.e. $X_{\star}$.
-- hyperParam: Vector with two elements, $\sigma_f$ and $l$.
+- hyperParam: Vector with two elements, $\sigma_f$ and $\ell$.
 - sigmaNoise: Noise  standard deviation $\sigma_n$.
 
 
@@ -79,9 +79,9 @@ posteriorGP <- function(x, y, xStar, hyperParam, sigmaNoise){
 ```
 
 
-##b)
+##2
 
-In this part we assume that prior hyper parameters are $\sigma_f = 1$, $l = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean, and the 95% probability bands (point wise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the $x$ grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and the bands become narrower.
+In this part we assume that prior hyper parameters are $\sigma_f = 1$, $\ell = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean, and the 95% probability bands (point wise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the $x$ grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and the bands become narrower.
 
 ```{r}
 noise <- 0.1
@@ -105,7 +105,7 @@ legend("topleft",c("posterior mean", "probability bands", "observation"),
 ```
 
 
-##c)
+##3
 
 The posterior is updated with one more observation $(x,y)=(-0.6,-0.044)$. The plot below shows again the observations, the posterior mean, and the 95% (point wise) probability bands over the grid $[-1,1]$. This time the uncertainty is smaller for the two observed $x$ values: the probability bands are narrower there.
 
@@ -128,7 +128,7 @@ legend("topright",c("posterior mean", "probability bands", "observations"),
 ```
 
 
-##d)
+##4
 
 The plot shows the posterior mean and the 95% probability bands after 5 observations. The uncertainty has decreased a lot compared to when we only had one and two observations (as indicated by the decreased width of the probability bands).
 
@@ -149,9 +149,9 @@ legend("topright",c("posterior mean", "probability bands"),
 ```
 
 
-##e)
+##5
 
-The plot below shows the posterior mean and the 95% probability bands after 5 observations as in part 4, but changing the hyper parameters to $\sigma_f = 1$, $l = 1$. The higher the $l$ value, the smoother the posterior mean becomes. In the kernel, the distance between the points is divided by $l$. This means that a higher value of this hyper parameter makes the  kernel values converge to $\sigma_f$: the distance between the observations becomes less and less important. Hence, the posterior mean becomes more smooth.
+The plot below shows the posterior mean and the 95% probability bands after 5 observations as in part 4, but changing the hyper parameters to $\sigma_f = 1$, $\ell = 1$. The higher the $\ell$ value, the smoother the posterior mean becomes. In the kernel, the distance between the points is divided by $\ell$. This means that a higher value of this hyper parameter makes the  kernel values converge to $\sigma_f$: the distance between the observations becomes less and less important. Hence, the posterior mean becomes more smooth.
 
 ```{r}
 hyperParam2 <- list(sigmaF=1, l=1)
@@ -170,11 +170,11 @@ legend("topright",c("posterior mean", "probability bands"),
 ```
 
 
-# Question 2
+# Question 2.2
 
 For this exercise, data of daily mean temperatures in Tullinge are used.
 
-##a)
+##1
 
 
 ```{r}
@@ -205,7 +205,7 @@ k_cov1
 ```
 
 
-##b)
+##2
 
 The following model was used to obtain the posterior mean:
 $$temp = f(time) + \epsilon$$
@@ -235,7 +235,7 @@ legend("bottomright",c("observations", "posterior mean (time)"),
 
 ```
 
-##c)
+##3
 
 ```{r}
 x <- scale(fTime)
@@ -265,7 +265,7 @@ legend("bottomright",c("posterior mean (time)", "probability bands","prediction 
 ```
 
 
-##d)
+##4
 
 The following model was used to obtain the posterior mean:
 $$temp = f(day) + \epsilon, \ \ \epsilon \sim N(0,\sigma_n^2), \ \ f \sim GP(0, k(day, day^\prime))$$
@@ -297,7 +297,7 @@ The model with prediction variable $time$ shows a more smooth posterior mean cur
 The posterior mean for $day$ captures the seasonal trend of the temperature (as the $day=1,2,...,365$ variable is replicated 6 times), but the posterior mean for $time$ captures the overall trend of temperature. 
 Briefly, it is better to use the $time$ model to see changes overtime and better to use the $day$ model to see general seasonal trends within a year.
 
-##e)
+##5
 
 The GP with a generalization of the periodic kernel is used in this part to model the temperature against time.
 
@@ -334,11 +334,11 @@ legend("bottomright",c("posterior mean (time)","posterior mean (day)","posterior
 
 From the plot, it seems that the model with periodic kernel captures more within year seasonality than the model with squared exponential kernel with variable $time$ and also shows more overall trend of temperature than the model with squared exponential kernel with variable $day$. Since the periodic kernel has one more length scale, which controls the correlation between the same day in different years, this result looks reasonable.
 
-# Question 3
+# Question 2.3
 
 Banknote fraud data was used to fit a Gaussian process classification model. 1000 observations were used as training data and the rest as test data.
 
-##a)
+##1
 
 Using the `kernlab` library, a GP classification model was trained on the training data using the covariates $varWave$ and $skewWave$.
 
@@ -382,7 +382,7 @@ accuracy1
 ```
 
 
-##b)
+##2
 
 Using the model obtained, predictions were made on the test data. The confusion matrix and accuracy rate was
 
@@ -395,7 +395,7 @@ accuracy2
 
 The accuracy is `r accuracy2`, which is pretty close to the accuracy rate obtained on the training data. This is a good indication that the classification works well and that the model is not over fitting the training data.
 
-##c)
+##3
 
 Using all four covariates, a GP classification model was trained on the training data and then predictions were made using the test data. 
 
