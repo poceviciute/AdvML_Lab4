@@ -1,6 +1,6 @@
 ---
-title: '732A96 Lab 4: Gaussian Processes'
-author: "Fanny Karelius (fanka300)"
+title: "AML_Lab4_Group8"
+author: "Hyungyum Kim, Milda Poceviciute, Boxi Zhang, Fanny Karelius"
 date: "17 october 2018"
 output:
   html_document: default
@@ -11,14 +11,12 @@ set.seed(987654321)
 library(readr)
 library(kernlab)
 library(AtmRay)
-library(knitr)
 ```
 
-# Question 2.1 Implementing GP Regression
+# Question 2.1
 
 ##1
 ```{r, echo=FALSE}
-#Confidence bands
 conf_band <- function(mean, var){
   upp_band <- mean+qnorm(0.975)*sqrt(diag(var))
   low_band <- mean-qnorm(0.975)*sqrt(diag(var))
@@ -39,8 +37,6 @@ The function is called posteriorGP and has following inputs:
 
 
 ```{r}
-############### 2.1
-#1
 SE_kernel <- function(sigmaf, ell){
   val <- function(x1, x2){
     n1 <- length(x1)
@@ -88,7 +84,6 @@ posteriorGP <- function(x, y, xStar, hyperParam, sigmaNoise){
 In this part we assume that prior hyper parameters are $\sigma_f = 1$, $\ell = 0.3$, and we update the posterior with observation $(x,y)=(0.4,0.719)$. Here $\sigma_n$ is assumed to be 0.1. The plot below shows the observation, the posterior mean, and the 95% probability bands (point wise) plotted over a grid $[-1,1]$. The probability bands are quite wide for most of the $x$ grid points, except from the location of the observed point $(x,y)$. This observation decreases the uncertainty and the bands become narrower.
 
 ```{r}
-#2
 noise <- 0.1
 hyperParam <- list("sigmaF"=1, "l"=0.3)
 xGrid <- seq(-1,1,length=50)
@@ -115,7 +110,6 @@ legend("topleft",c("posterior mean", "probability bands", "observation"),
 The posterior is updated with one more observation $(x,y)=(-0.6,-0.044)$. The plot below shows again the observations, the posterior mean, and the 95% (point wise) probability bands over the grid $[-1,1]$. This time the uncertainty is smaller for the two observed $x$ values: the probability bands are narrower there.
 
 ```{r}
-#3
 obs2 <- list(x=c(obs1$x,-0.6), y=c(obs1$y,-0.044))
 post2 <- posteriorGP(obs2$x, obs2$y, xGrid, hyperParam, noise)
 confband2 <- conf_band(post2$pred_mean, post2$pred_var)
@@ -138,10 +132,8 @@ legend("topright",c("posterior mean", "probability bands", "observations"),
 
 The plot shows the posterior mean and the 95% probability bands after 5 observations. The uncertainty has decreased a lot compared to when we only had one and two observations (as indicated by the decreased width of the probability bands).
 
-```{r, results="asis"}
-#4
+```{r}
 obs3 <- list(x=c(obs2$x, -1, -0.2, 0.8), y=c(obs2$y, 0.768, -0.94, -0.664))
-kable(as.data.frame(obs3), caption = "Observations")
 post3 <- posteriorGP(obs3$x, obs3$y, xGrid, hyperParam, noise)
 confband3 <- conf_band(post3$pred_mean, post3$pred_var)
 
@@ -162,7 +154,6 @@ legend("topright",c("posterior mean", "probability bands"),
 The plot below shows the posterior mean and the 95% probability bands after 5 observations as in part 4, but changing the hyper parameters to $\sigma_f = 1$, $\ell = 1$. The higher the $\ell$ value, the smoother the posterior mean becomes. In the kernel, the distance between the points is divided by $\ell$. This means that a higher value of this hyper parameter makes the  kernel values converge to $\sigma_f$: the distance between the observations becomes less and less important. Hence, the posterior mean becomes more smooth.
 
 ```{r}
-#5
 hyperParam2 <- list(sigmaF=1, l=1)
 post4 <- posteriorGP(obs3$x, obs3$y, xGrid, hyperParam2, noise)
 confband4 <- conf_band(post4$pred_mean, post4$pred_var)
@@ -179,7 +170,7 @@ legend("topright",c("posterior mean", "probability bands"),
 ```
 
 
-# Question 2.2 GP Regression with _kernlab_
+# Question 2.2
 
 For this exercise, data of daily mean temperatures in Tullinge are used.
 
@@ -187,8 +178,6 @@ For this exercise, data of daily mean temperatures in Tullinge are used.
 
 
 ```{r}
-################### 2.2
-#1
 TempTullinge <- read.csv("D:/LiU/732A96/AdvML_Lab4/TempTullinge.csv", header=TRUE, sep=";")
 
 time <- 1:length(TempTullinge$date)
@@ -197,13 +186,14 @@ fTime <- seq(from=time[1], to=time[length(time)], by = 5)
 fDay <- seq(from=day[1], to=day[length(day)], by = 5)
 temp <- TempTullinge$temp[fTime]
 
+
+#What sigmaf and ell??
 kernel_func <- SE_kernel(sigmaf=1, ell=0.3)
 point1 <- c(1,2)
 kernel_point1 <- kernel_func(point1[1], point1[2])
 x_vec <- c(1,3,4)
 xStar_vec <- c(2,3,4)
 k_cov1<-kernelMatrix(kernel = kernel_func, x = x_vec, y = xStar_vec)
-
 ```
 
 For the point $x=1, x'=2$, the squared exponential kernel value (with $\sigma_f=1, \ell = 0.3$) was `r kernel_point1`.
@@ -218,14 +208,14 @@ k_cov1
 ##2
 
 The following model was used to obtain the posterior mean:
-$$temp = f(time) + \epsilon, \ \ \epsilon \sim N(0,\sigma_n^2), \ \ f \sim GP(0,k(time,time^{'}))$$
+$$temp = f(time) + \epsilon$$
+with $\epsilon \sim N(0,\sigma_n^2)$, $f \sim GP(0,k(time,time^{'}))$
 
 $\sigma_n^2$ was obtained by taking the variance of the residuals from a quadratic regression of $temp$ as a function of $time$.
 
 The hyper parameters used in the squared exponential kernel were $\sigma_f=20, \ell=0.2$. A Gaussian process model was fitted on every fifth observation. The posterior mean was calculated by predicting on the training data.
 
 ```{r}
-#2
 lm_fit <- lm(temp~time+time^2, data = TempTullinge)
 sigma2n <- var(lm_fit$residuals)
 kernel_func2 <- SE_kernel(sigmaf=20, ell=0.2)
@@ -248,7 +238,6 @@ legend("bottomright",c("observations", "posterior mean (time)"),
 ##3
 
 ```{r}
-#3
 x <- scale(fTime)
 xs <- scale(fTime)
 n <- length(fTime)
@@ -262,9 +251,9 @@ Covf = Kss-t(Kxs)%*%solve(Kxx + sigma2n*diag(n), Kxs) # Covariance matrix of fSt
 From the plot below, we see that the probability and prediction bands fit the data quite well. Though, the prediction bands are quite wide.
 
 ```{r, echo=FALSE}
+# Probability intervals for fStar
 plot(fTime, temp, ylim=c(-40,35), pch=20, main="Posterior mean of f", xlab="Time")
 lines(fTime,post_mean, col="blue", lwd=2)
-# Probability intervals for fStar
 lines(fTime, post_mean - 1.96*sqrt(diag(Covf)), col = "red", lwd=2)
 lines(fTime, post_mean + 1.96*sqrt(diag(Covf)), col = "red", lwd=2)
 # Prediction intervals for yStar
@@ -286,7 +275,6 @@ $\sigma_n^2$ was obtained by taking the variance of the residuals from a quadrat
 The hyper parameters used in the squared exponential kernel were $\sigma_f=20, \ell=0.2$. A Gaussian process model was fitted on every fifth observation. The posterior mean was calculated by predicting on the training data.
 
 ```{r}
-#4
 fDay_rep <- rep(fDay,6)
 lm_fit2 <- lm(temp~fDay_rep+fDay_rep^2)
 sigma2n_day <- var(lm_fit2$residuals)
@@ -316,10 +304,9 @@ The GP with a generalization of the periodic kernel is used in this part to mode
 The periodic kernel is given by:
 $$k(x,x')=\sigma_f^2\exp{\{-\frac{2\sin^2(pi|x-x'|)/d}{\ell_1^2}\}}\exp{\{-\frac{|x-x'|^2}{2\ell_2^2}\}}$$
 
-The hyper parameters used in the kernel were $\sigma_f=20, \ell_1=1, \ell_2=10, d=365/sd(time)$.
+The hyper parameters used in the kernel were $\sigma_f=20, \ell_1=1, \ell_2=10, d=365/\text{sd}(time)$.
 
 ```{r}
-#5
 periodic_kernel <- function(sigmaf, ell1, ell2, d){
   val <- function(x1, x2){
     n1 <- length(x1)
@@ -352,7 +339,7 @@ legend("bottomright",c("posterior mean (time)","posterior mean (day)","posterior
 
 From the plot, it seems that the model with periodic kernel captures more within year seasonality than the model with squared exponential kernel with variable $time$ and also shows more overall trend of temperature than the model with squared exponential kernel with variable $day$. Since the periodic kernel has one more length scale, which controls the correlation between the same day in different years, this result looks reasonable.
 
-# Question 2.3 GP Classification with kernlab
+# Question 2.3
 
 Banknote fraud data was used to fit a Gaussian process classification model. 1000 observations were used as training data and the rest as test data.
 
@@ -361,12 +348,10 @@ Banknote fraud data was used to fit a Gaussian process classification model. 100
 Using the `kernlab` library, a GP classification model was trained on the training data using the covariates $varWave$ and $skewWave$.
 
 ```{r, message=FALSE}
-######################## 2.3
 fraud_data <- read.csv("https://github.com/STIMALiU/AdvMLCourse/raw/master/GaussianProcess/Code/banknoteFraud.csv", header=FALSE, sep=",")
 names(fraud_data) <- c("varWave","skewWave","kurtWave","entropyWave","fraud") 
 fraud_data[,5] <- as.factor(fraud_data[,5])
 
-#1
 set.seed(111)
 SelectTraining <- sample(1:dim(fraud_data)[1], size = 1000, replace = FALSE)
 fraud_train <- fraud_data[SelectTraining,]
@@ -407,7 +392,6 @@ accuracy1
 Using the model obtained, predictions were made on the test data. The confusion matrix and accuracy rate was
 
 ```{r}
-#2
 conf_mat2<-table("Prediction"=predict(gp_fraud1, fraud_test[,1:2]), "True"=fraud_test$fraud)
 accuracy2<-sum(diag(conf_mat2))/sum(conf_mat2)
 conf_mat2
@@ -421,7 +405,6 @@ The accuracy is `r accuracy2`, which is pretty close to the accuracy rate obtain
 Using all four covariates, a GP classification model was trained on the training data and then predictions were made using the test data. 
 
 ```{r, results="hide"}
-#3
 gp_fraud2 <- gausspr(fraud~., data=fraud_train)
 conf_mat3<-table("Prediction"=predict(gp_fraud2, fraud_test), "True"=fraud_test$fraud)
 accuracy3<-sum(diag(conf_mat3))/sum(conf_mat3)
