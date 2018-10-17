@@ -30,12 +30,14 @@ For the first exercise, the following Gaussian process regression model will be 
 $$ y = f(x) + \epsilon, \ \ \epsilon \sim N(0, \sigma_n^2), \ \  f \sim GP(0, k(x,x^\prime))$$
 The function is called posteriorGP and has following inputs:
 
-- X: Vector of training inputs.
+- x: Vector of training inputs.
 - y: Vector of training targets/outputs.
-- XStar: Vector of inputs where the posterior distribution is evaluated. i.e. $X_{\star}$.
-- hyperParam: Vector with two elements, $\sigma_f$ and $\ell$.
+- xStar: Vector of inputs where the posterior distribution is evaluated. i.e. $X_{\star}$.
+- hyperParam: List with two elements, $\sigma_f$ and $\ell$.
 - sigmaNoise: Noise  standard deviation $\sigma_n$.
 
+The kernel used was the squared exponential kernel given by:
+$$k(x,x_*)=\sigma_f^2\exp\{-\frac{1}{2}\left(\frac{x-x_*}{\ell}\right)^2\}$$
 
 ```{r,eval=TRUE}
 SE_kernel <- function(sigmaf, ell){
