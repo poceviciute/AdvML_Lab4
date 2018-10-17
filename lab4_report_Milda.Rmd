@@ -412,7 +412,7 @@ conM2
 ```
 
 
-The accuracy is `r accuracy(conM2)`, which is pretty close to the accuracy rate obtained on the training data. This is a good indication that the classification works well.
+The accuracy is `r accuracy(conM2)`, which is pretty close to the accuracy rate obtained on the training data. This is a good indication that the classification works well, and it is not overfitted.
 
 ### Part 3
 
