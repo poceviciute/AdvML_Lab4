@@ -213,6 +213,8 @@ cat("\n")
 covM
 ```
 
+When we used to fit GP with different $\ell$ in the kernel, we get that smaller $\ell$ gives less smooth f: we are overfitting the data. And larger  $\ell$ (length scale) gives more smoothness.
+
 ### Part 2
 
 The following model is used for obtaining the posterior mean:
@@ -256,7 +258,7 @@ Kxs <- kernelMatrix(kernel = SEkernel, x = x, y = xs)
 Covf = Kss-t(Kxs)%*%solve(Kxx + sigmaNoise^2*diag(n), Kxs) # Covariance matrix of fStar
 ```
 
-From the plot below, we see that the probability and prediction bands fit the data quite well. Though, the prediction bands are quite wide.
+From the plot below, we see that the probability bands (the uncertainty of the function f, which is the MEAN of y) and the prediction bands (the uncertainty of individual y values. Here we are uncertain for two reasons: we don't know f at the test point, and we don't know the error (epsilon) that will hit this individual observation) fit the data quite well. Though, the prediction bands are quite wide as it contains more uncertainty.
 
 ```{r}
 
@@ -273,6 +275,7 @@ legend("topright",c("Observations","Post. Mean","Prob. bands","Pred. bands"),
 
 
 ```
+
 
 ### Part 4
 
